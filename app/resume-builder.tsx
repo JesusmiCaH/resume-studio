@@ -1,6 +1,8 @@
 "use client";
 
 import { ChangeEvent, ReactNode, useEffect, useRef, useState } from "react";
+import { FaGithub, FaLink, FaLinkedin, FaLocationDot, FaPhone, FaRegEnvelope } from "react-icons/fa6";
+import type { IconType } from "react-icons";
 
 type Template = "Scholar" | "Modern" | "Compact";
 type PageSize = "letter" | "a4";
@@ -287,12 +289,16 @@ function ResumePaper({ resume, template, pageSize, zoom }: { resume: ResumeData;
       <h2>{p.name}</h2>
       <p className="resume-headline">{p.headline}</p>
       <div className="resume-contact">
-        {p.location && <span>{p.location}</span>}
-        {p.email && <ResumeLink href={`mailto:${p.email.trim()}`}>{p.email}</ResumeLink>}
-        {p.phone && <ResumeLink href={`tel:${p.phone.replace(/[^+\d]/g, "")}`}>{p.phone}</ResumeLink>}
-        {p.website && <ResumeLink href={toExternalUrl(p.website)}>{p.website}</ResumeLink>}
-        {p.github && <ResumeLink href={toProfileUrl(p.github, "github.com")}>{p.github}</ResumeLink>}
-        {p.linkedin && <ResumeLink href={toProfileUrl(p.linkedin, "linkedin.com/in")}>{p.linkedin}</ResumeLink>}
+        <div className="contact-row">
+          {p.location && <ContactItem icon={FaLocationDot}>{p.location}</ContactItem>}
+          {p.email && <ContactItem icon={FaRegEnvelope} href={`mailto:${p.email.trim()}`}>{p.email}</ContactItem>}
+          {p.phone && <ContactItem icon={FaPhone} href={`tel:${p.phone.replace(/[^+\d]/g, "")}`}>{p.phone}</ContactItem>}
+          {p.linkedin && <ContactItem icon={FaLinkedin} href={toProfileUrl(p.linkedin, "linkedin.com/in")}>{p.linkedin}</ContactItem>}
+        </div>
+        <div className="contact-row">
+          {p.github && <ContactItem icon={FaGithub} href={toProfileUrl(p.github, "github.com")}>{p.github}</ContactItem>}
+          {p.website && <ContactItem icon={FaLink} href={toExternalUrl(p.website)}>{p.website}</ContactItem>}
+        </div>
       </div>
     </header>
     {p.summary && <p className="resume-summary">{p.summary}</p>}
@@ -305,8 +311,13 @@ function ResumePaper({ resume, template, pageSize, zoom }: { resume: ResumeData;
   </article>;
 }
 
-function ResumeLink({ href, children }: { href: string; children: ReactNode }) {
-  return <a href={href} target={href.startsWith("http") ? "_blank" : undefined} rel={href.startsWith("http") ? "noreferrer" : undefined}>{children}</a>;
+function ContactItem({ icon: Icon, href, children }: { icon: IconType; href?: string; children: ReactNode }) {
+  const content = <><Icon aria-hidden="true" /><span>{children}</span></>;
+  return href ? <ResumeLink href={href} className="contact-item">{content}</ResumeLink> : <span className="contact-item">{content}</span>;
+}
+
+function ResumeLink({ href, children, className }: { href: string; children: ReactNode; className?: string }) {
+  return <a className={className} href={href} target={href.startsWith("http") ? "_blank" : undefined} rel={href.startsWith("http") ? "noreferrer" : undefined}>{children}</a>;
 }
 
 function toExternalUrl(value: string) {
