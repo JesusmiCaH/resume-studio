@@ -47,6 +47,21 @@ const sectionLabels: Record<SectionKey, string> = {
 };
 
 const tabs = Object.keys(sectionLabels) as SectionKey[];
+const resumeContentVersion = 2;
+
+const teraExperience: ResumeItem = {
+  id: "exp-tera",
+  title: "Research Intern",
+  subtitle: "Tera AI",
+  location: "Remote",
+  date: "Aug 2025 — Aug 2026",
+  bullets: [
+    "Built a training-data pipeline for a proprietary GPS-denied visual-navigation system, converting 132 pilot-collected flights (~660K frames) with images, poses, and depth into paired samples and dense point correspondences for learned matching.",
+    "Trained and evaluated a frame-to-frame correspondence model and integrated its predictions into pose optimization for aircraft localization, contributing to lower flight-level trajectory error after fine-tuning on internal data.",
+    "Developed a flight-replay and failure-diagnosis workflow that traced pair-level matching behavior to downstream ATE, distilling ~2.6K high-value hard frames into actionable failure modes for targeted model iteration.",
+    "Adapted and evaluated COLMAP, Depth Anything 3, MapAnything, and Gaussian Splatting to produce a high-fidelity 3D reconstruction from a challenging customer-provided ground-video sequence and deliver a visual demonstration to an aerospace partner.",
+  ],
+};
 
 const initialResume: ResumeData = {
   profile: {
@@ -59,7 +74,7 @@ const initialResume: ResumeData = {
     github: "JesusmiCaH",
     linkedin: "Chenghao-Jiang",
     summary: "Researcher building robust 3D perception and generative vision systems for real-world environments.",
-    updated: "Dec 2025",
+    updated: "Aug 2026",
   },
   education: [
     { id: "edu-uw", title: "University of Wisconsin–Madison", subtitle: "MS in Electrical and Computer Engineering", location: "Madison, WI", date: "Sep 2024 — Dec 2025", bullets: ["Coursework: Learning-based Image Synthesis, High Performance Computing, Reinforcement Learning"] },
@@ -68,7 +83,7 @@ const initialResume: ResumeData = {
   ],
   experience: [
     { id: "exp-jhu", title: "Research Assistant", subtitle: "Johns Hopkins University", location: "Remote", date: "Sep 2025 — Present", bullets: ["Designed a ViT-based image encoder that disentangles a photo into illumination (extrinsic) and scene content (intrinsic), with a decoder that reconstructs accurate images from combined representations.", "Designed a DiT-based generative pipeline that takes lighting as a prompt and reference scene content as control, achieving high-quality vivid images."] },
-    { id: "exp-tera", title: "Research Intern", subtitle: "Tera AI", location: "Remote", date: "Aug 2025 — Present", bullets: ["Achieved keyframe selection and periodic global optimization on Stream3R, substantially reducing streaming-inference memory use and increasing frame capacity.", "Designed visual odometry with a DINOv3 encoder to match correspondences across frames and reconstruct camera trajectories with a weighted eight-point algorithm.", "Collected and processed real-traffic imagery across varied times and weather conditions."] },
+    teraExperience,
   ],
   projects: [
     { id: "project-sharp", title: "Privacy-Aware Sensor Data for Cooperative Perception", subtitle: "Supervised by Prof. Akarsh Prabhakara", location: "Madison, WI", date: "Jun 2025 — Jul 2025", bullets: ["Explored cooperative SLAM under privacy constraints using SHARP, transmitting pointmap-based novel-view renderings instead of raw images.", "Evaluated VGGT on the OPV2V dataset across ego-only, SHARP-generated, and raw multi-agent inputs.", "Extended the CARLA simulation in OPV2V with depth sensing for point-cloud rescaling and downstream 3D recovery."] },
@@ -86,6 +101,18 @@ const initialResume: ResumeData = {
 const cloneInitial = () => JSON.parse(JSON.stringify(initialResume)) as ResumeData;
 const makeId = () => typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
 
+function migrateSavedResume(saved: { resume?: ResumeData; contentVersion?: number }) {
+  if (!saved.resume) return cloneInitial();
+  if ((saved.contentVersion ?? 1) >= resumeContentVersion) return saved.resume;
+
+  const next = JSON.parse(JSON.stringify(saved.resume)) as ResumeData;
+  const teraIndex = next.experience.findIndex((item) => item.id === "exp-tera");
+  if (teraIndex >= 0) next.experience[teraIndex] = JSON.parse(JSON.stringify(teraExperience));
+  else next.experience.push(JSON.parse(JSON.stringify(teraExperience)));
+  if (next.profile.updated === "Dec 2025") next.profile.updated = "Aug 2026";
+  return next;
+}
+
 export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "letter" }: { initialTemplate?: Template; initialPageSize?: PageSize }) {
   const [resume, setResume] = useState<ResumeData>(cloneInitial);
   const [activeSection, setActiveSection] = useState<SectionKey>("profile");
@@ -101,7 +128,7 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
       const saved = localStorage.getItem("tommy-resume-studio-v1");
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.resume) setResume(parsed.resume);
+        if (parsed.resume) setResume(migrateSavedResume(parsed));
         if (parsed.template) setTemplate(parsed.template);
         if (parsed.pageSize) setPageSize(parsed.pageSize);
         setStatus("已恢复上次编辑");
@@ -119,7 +146,7 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
 
   useEffect(() => {
     if (!ready) return;
-    localStorage.setItem("tommy-resume-studio-v1", JSON.stringify({ resume, template, pageSize }));
+    localStorage.setItem("tommy-resume-studio-v1", JSON.stringify({ resume, template, pageSize, contentVersion: resumeContentVersion }));
     const timer = window.setTimeout(() => setStatus("已自动保存"), 250);
     return () => window.clearTimeout(timer);
   }, [resume, template, pageSize, ready]);
