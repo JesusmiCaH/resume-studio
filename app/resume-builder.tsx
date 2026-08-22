@@ -286,7 +286,14 @@ function ResumePaper({ resume, template, pageSize, zoom }: { resume: ResumeData;
       <p className="resume-kicker">CURRICULUM VITAE <span>UPDATED {p.updated.toUpperCase()}</span></p>
       <h2>{p.name}</h2>
       <p className="resume-headline">{p.headline}</p>
-      <p className="resume-contact">{[p.location, p.email, p.phone, p.website, p.github, p.linkedin].filter(Boolean).join("  ·  ")}</p>
+      <div className="resume-contact">
+        {p.location && <span>{p.location}</span>}
+        {p.email && <ResumeLink href={`mailto:${p.email.trim()}`}>{p.email}</ResumeLink>}
+        {p.phone && <ResumeLink href={`tel:${p.phone.replace(/[^+\d]/g, "")}`}>{p.phone}</ResumeLink>}
+        {p.website && <ResumeLink href={toExternalUrl(p.website)}>{p.website}</ResumeLink>}
+        {p.github && <ResumeLink href={toProfileUrl(p.github, "github.com")}>{p.github}</ResumeLink>}
+        {p.linkedin && <ResumeLink href={toProfileUrl(p.linkedin, "linkedin.com/in")}>{p.linkedin}</ResumeLink>}
+      </div>
     </header>
     {p.summary && <p className="resume-summary">{p.summary}</p>}
     <ResumeSection title="Education"><ItemList items={resume.education} /></ResumeSection>
@@ -294,8 +301,25 @@ function ResumePaper({ resume, template, pageSize, zoom }: { resume: ResumeData;
     <ResumeSection title="Selected Projects"><ItemList items={resume.projects} /></ResumeSection>
     {resume.publications.length > 0 && <ResumeSection title="Publications"><ItemList items={resume.publications} publication /></ResumeSection>}
     {resume.skills.length > 0 && <ResumeSection title="Skills"><ItemList items={resume.skills} skills /></ResumeSection>}
-    <footer className="resume-footer"><span>{p.name}</span><span>{p.website}</span></footer>
+    <footer className="resume-footer"><span>{p.name}</span>{p.website && <ResumeLink href={toExternalUrl(p.website)}>{p.website}</ResumeLink>}</footer>
   </article>;
+}
+
+function ResumeLink({ href, children }: { href: string; children: ReactNode }) {
+  return <a href={href} target={href.startsWith("http") ? "_blank" : undefined} rel={href.startsWith("http") ? "noreferrer" : undefined}>{children}</a>;
+}
+
+function toExternalUrl(value: string) {
+  const clean = value.trim();
+  return /^https?:\/\//i.test(clean) ? clean : `https://${clean.replace(/^\/+/, "")}`;
+}
+
+function toProfileUrl(value: string, host: string) {
+  const clean = value.trim();
+  if (/^https?:\/\//i.test(clean)) return clean;
+  const withoutAt = clean.replace(/^@/, "").replace(/^\/+/, "");
+  if (withoutAt.toLowerCase().startsWith(`${host.toLowerCase()}/`)) return `https://${withoutAt}`;
+  return `https://${host}/${withoutAt}`;
 }
 
 function ResumeSection({ title, children }: { title: string; children: ReactNode }) {
