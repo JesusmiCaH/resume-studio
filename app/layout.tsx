@@ -13,6 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://chenghao-resume-studio.townkuku.chatgpt.site"),
   title: "Resume Studio — Chenghao Jiang",
   description: "A private, browser-based resume editor with live PDF-ready templates.",
   applicationName: "Resume Studio",
@@ -22,11 +23,14 @@ export const metadata: Metadata = {
     title: "Resume Studio",
     description: "Edit once. Export beautifully.",
     type: "website",
+    url: "https://chenghao-resume-studio.townkuku.chatgpt.site",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Resume Studio — Edit once. Export beautifully." }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Resume Studio",
     description: "Edit once. Export beautifully.",
+    images: ["/og.png"],
   },
   icons: {
     icon: "/favicon.svg",
