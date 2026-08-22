@@ -102,8 +102,9 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .entry-heading span { white-space: nowrap; font: italic 7.7px/1.3 Georgia, serif; color: #737b76; }
 .entry-subheading { display: flex; justify-content: space-between; gap: 18px; margin-top: 1px; font: 8.1px/1.35 Georgia, serif; color: #4f5752; }
 .entry-subheading span { white-space: nowrap; }
-.resume-entry ul { margin: 3px 0 0; padding-left: 14px; }
+.resume-entry ul { margin: 3px 0 0; padding-left: 14px; list-style: disc outside; }
 .resume-entry li { color: #414944; font-size: 7.8px; line-height: 1.37; margin-bottom: 1.5px; padding-left: 1px; }
+.resume-entry li::marker { color: #17201c; font-size: .9em; }
 .publication-entry .entry-subheading { display: block; }
 .skill-entry { display: grid; grid-template-columns: 1.2in 1fr; margin-bottom: 4px; }
 .skill-entry .entry-heading { display: block; }

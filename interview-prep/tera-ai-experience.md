@@ -41,16 +41,26 @@ Public company-level metrics that may be cited with attribution, but not claimed
 
 ## My role
 
+### Employment timeline
+
+- **Research Intern, part-time — Aug 2025 to Feb 2026:** Stream3R memory and sequence-length improvements, DINOv3-based visual odometry, and real-world traffic-data collection.
+- **Research Intern, full-time — Feb 2026 to Aug 2026:** GPS-denied flight training data, learned frame correspondence and pose optimization, flight-level diagnosis and hard-case mining, and customer ground-video reconstruction.
+
 ### Resume version
 
-- Built a training-data pipeline for a proprietary GPS-denied visual-navigation system, converting 132 pilot-collected flights (~660K frames) with images, poses, and depth into paired samples and dense point correspondences for learned matching.
-- Trained and evaluated a frame-to-frame correspondence model and integrated its predictions into pose optimization for aircraft localization, contributing to lower flight-level trajectory error after fine-tuning on internal data.
-- Developed a flight-replay and failure-diagnosis workflow that traced pair-level matching behavior to downstream ATE, distilling ~2.6K high-value hard frames into actionable failure modes for targeted model iteration.
-- Adapted and evaluated COLMAP, Depth Anything 3, MapAnything, and Gaussian Splatting to produce a high-fidelity 3D reconstruction from a challenging customer-provided ground-video sequence and deliver a visual demonstration to an aerospace partner.
+- **Part-time, Aug 2025 — Feb 2026**
+  - Implemented keyframe selection and periodic global optimization for Stream3R, substantially reducing streaming-inference memory consumption and increasing supported sequence length.
+  - Built a visual-odometry pipeline with a DINOv3 encoder for inter-frame correspondence matching and camera-trajectory reconstruction via a weighted eight-point algorithm.
+  - Collected and curated real-world traffic imagery across times of day and weather conditions to support robust model training and evaluation.
+- **Full-time, Feb 2026 — Aug 2026**
+  - Built a training-data pipeline for a proprietary GPS-denied visual-navigation system, converting 132 pilot-collected flights (~660K frames) with images, poses, and depth into paired samples and dense point correspondences for learned matching.
+  - Trained and evaluated a frame-to-frame correspondence model and integrated its predictions into pose optimization for aircraft localization, contributing to lower flight-level trajectory error after fine-tuning on internal data.
+  - Developed a flight-replay and failure-diagnosis workflow that traced pair-level matching behavior to downstream ATE, distilling ~2.6K high-value hard frames into actionable failure modes for targeted model iteration.
+  - Adapted and evaluated COLMAP, Depth Anything 3, MapAnything, and Gaussian Splatting to produce a high-fidelity 3D reconstruction from a challenging customer-provided ground-video sequence and deliver a visual demonstration to an aerospace partner.
 
 ### 60-second role summary
 
-> I worked on the training and reliability loop for a proprietary GPS-denied flight-navigation system. First, I converted raw pilot-collected flight logs into model-ready data. The corpus contained 132 flights and roughly 660,000 frames, with an image, pose, and depth estimate per frame plus candidate frame pairs. I also prepared preprocessing that converted those inputs into dense point-correspondence supervision for a learned frame-to-frame matcher. The model's correspondences were then used by pose optimization. My second focus was diagnosing the gap between pair-level matching quality and flight-level ATE. I replayed recorded flights, isolated the small number of frames that actually changed or failed to improve the trajectory, and organized roughly 2,600 hard frames into concrete failure modes. That gave the team a compact set for targeted fine-tuning and, more importantly, a way to understand why apparently reasonable matches could still produce poor flight behavior.
+> I joined Tera part-time in August 2025 and moved to full-time in February 2026. During the part-time phase, I worked on Stream3R keyframe selection and periodic global optimization, a DINOv3-based visual-odometry pipeline, and real-world traffic-data collection. After moving full-time, I focused on the training and reliability loop for a proprietary GPS-denied flight-navigation system. I converted 132 pilot-collected flights—roughly 660,000 frames—into dense correspondence supervision for a learned frame matcher, then analyzed how its outputs affected downstream pose optimization. I also replayed recorded flights and distilled roughly 2,600 hard frames into concrete failure modes, giving the team a compact set for targeted fine-tuning and a clearer account of why locally reasonable matches could still produce poor flight-level ATE.
 
 ## Technical walkthrough
 

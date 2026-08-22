@@ -47,19 +47,32 @@ const sectionLabels: Record<SectionKey, string> = {
 };
 
 const tabs = Object.keys(sectionLabels) as SectionKey[];
-const resumeContentVersion = 2;
+const resumeContentVersion = 3;
 
-const teraExperience: ResumeItem = {
-  id: "exp-tera",
-  title: "Research Intern",
+const teraFullTimeExperience: ResumeItem = {
+  id: "exp-tera-fulltime",
+  title: "Research Intern — Full-time",
   subtitle: "Tera AI",
   location: "Remote",
-  date: "Aug 2025 — Aug 2026",
+  date: "Feb 2026 — Aug 2026",
   bullets: [
     "Built a training-data pipeline for a proprietary GPS-denied visual-navigation system, converting 132 pilot-collected flights (~660K frames) with images, poses, and depth into paired samples and dense point correspondences for learned matching.",
     "Trained and evaluated a frame-to-frame correspondence model and integrated its predictions into pose optimization for aircraft localization, contributing to lower flight-level trajectory error after fine-tuning on internal data.",
     "Developed a flight-replay and failure-diagnosis workflow that traced pair-level matching behavior to downstream ATE, distilling ~2.6K high-value hard frames into actionable failure modes for targeted model iteration.",
     "Adapted and evaluated COLMAP, Depth Anything 3, MapAnything, and Gaussian Splatting to produce a high-fidelity 3D reconstruction from a challenging customer-provided ground-video sequence and deliver a visual demonstration to an aerospace partner.",
+  ],
+};
+
+const teraPartTimeExperience: ResumeItem = {
+  id: "exp-tera-parttime",
+  title: "Research Intern — Part-time",
+  subtitle: "Tera AI",
+  location: "Remote",
+  date: "Aug 2025 — Feb 2026",
+  bullets: [
+    "Implemented keyframe selection and periodic global optimization for Stream3R, substantially reducing streaming-inference memory consumption and increasing supported sequence length.",
+    "Built a visual-odometry pipeline with a DINOv3 encoder for inter-frame correspondence matching and camera-trajectory reconstruction via a weighted eight-point algorithm.",
+    "Collected and curated real-world traffic imagery across times of day and weather conditions to support robust model training and evaluation.",
   ],
 };
 
@@ -83,7 +96,8 @@ const initialResume: ResumeData = {
   ],
   experience: [
     { id: "exp-jhu", title: "Research Assistant", subtitle: "Johns Hopkins University", location: "Remote", date: "Sep 2025 — Present", bullets: ["Designed a ViT-based image encoder that disentangles a photo into illumination (extrinsic) and scene content (intrinsic), with a decoder that reconstructs accurate images from combined representations.", "Designed a DiT-based generative pipeline that takes lighting as a prompt and reference scene content as control, achieving high-quality vivid images."] },
-    teraExperience,
+    teraFullTimeExperience,
+    teraPartTimeExperience,
   ],
   projects: [
     { id: "project-sharp", title: "Privacy-Aware Sensor Data for Cooperative Perception", subtitle: "Supervised by Prof. Akarsh Prabhakara", location: "Madison, WI", date: "Jun 2025 — Jul 2025", bullets: ["Explored cooperative SLAM under privacy constraints using SHARP, transmitting pointmap-based novel-view renderings instead of raw images.", "Evaluated VGGT on the OPV2V dataset across ego-only, SHARP-generated, and raw multi-agent inputs.", "Extended the CARLA simulation in OPV2V with depth sensing for point-cloud rescaling and downstream 3D recovery."] },
@@ -106,9 +120,14 @@ function migrateSavedResume(saved: { resume?: ResumeData; contentVersion?: numbe
   if ((saved.contentVersion ?? 1) >= resumeContentVersion) return saved.resume;
 
   const next = JSON.parse(JSON.stringify(saved.resume)) as ResumeData;
-  const teraIndex = next.experience.findIndex((item) => item.id === "exp-tera");
-  if (teraIndex >= 0) next.experience[teraIndex] = JSON.parse(JSON.stringify(teraExperience));
-  else next.experience.push(JSON.parse(JSON.stringify(teraExperience)));
+  const teraIndex = next.experience.findIndex((item) => ["exp-tera", "exp-tera-fulltime", "exp-tera-parttime"].includes(item.id));
+  next.experience = next.experience.filter((item) => !["exp-tera", "exp-tera-fulltime", "exp-tera-parttime"].includes(item.id));
+  next.experience.splice(
+    teraIndex >= 0 ? teraIndex : next.experience.length,
+    0,
+    JSON.parse(JSON.stringify(teraFullTimeExperience)),
+    JSON.parse(JSON.stringify(teraPartTimeExperience)),
+  );
   if (next.profile.updated === "Dec 2025") next.profile.updated = "Aug 2026";
   return next;
 }
