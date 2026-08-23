@@ -39,3 +39,6 @@ yarn-error.log*
 /outputs/
 /work/
 /tmp/
+
+# Private interview notes and preparation material
+/interview-prep/
