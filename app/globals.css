@@ -23,6 +23,9 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .studio-header h1 { font: 600 20px/1.1 Georgia, serif; margin: 2px 0 0; }
 .eyebrow { margin: 0; color: #788078; font: 700 10px/1.2 Arial, sans-serif; letter-spacing: .15em; }
 .header-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.language-switch { display: inline-flex; padding: 2px; border: 1px solid #cbd1ca; border-radius: 8px; background: #eef0ec; }
+.language-switch button { border: 0; border-radius: 5px; padding: 5px 8px; background: transparent; color: #717a73; font-size: 10px; font-weight: 700; cursor: pointer; }
+.language-switch button.active { background: white; color: var(--ink); box-shadow: 0 1px 4px rgba(34,45,37,.12); }
 .saved-dot { color: #667069; font-size: 11px; margin-right: 8px; white-space: nowrap; }
 .saved-dot::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #7fa73e; margin-right: 7px; }
 .primary-button, .secondary-button, .text-button { border-radius: 8px; padding: 9px 12px; font-size: 12px; font-weight: 700; cursor: pointer; }
@@ -155,7 +158,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 
 @media (max-width: 640px) {
   .studio-header { padding: 10px 14px; }
-  .studio-header .eyebrow, .header-actions .secondary-button { display: none; }
+  .studio-header .eyebrow, .header-actions .secondary-button, .header-actions .text-button { display: none; }
   .studio-header h1 { font-size: 17px; }
   .header-actions { gap: 4px; }
   .editor-panel { padding: 28px 18px 40px; }

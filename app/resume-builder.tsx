@@ -6,7 +6,9 @@ import type { IconType } from "react-icons";
 
 type Template = "Scholar" | "Modern" | "Compact";
 type PageSize = "letter" | "a4";
+type Locale = "en" | "zh";
 type SectionKey = "profile" | "education" | "experience" | "projects" | "publications" | "skills";
+type StatusKey = "loaded" | "restored" | "readError" | "saving" | "saved" | "exported" | "imported" | "importError" | "reset";
 
 type ResumeItem = {
   id: string;
@@ -37,16 +39,70 @@ type ResumeData = {
   skills: ResumeItem[];
 };
 
-const sectionLabels: Record<SectionKey, string> = {
-  profile: "个人信息",
-  education: "教育经历",
-  experience: "工作经历",
-  projects: "项目经历",
-  publications: "论文发表",
-  skills: "技能方向",
+const translations = {
+  en: {
+    sectionLabels: { profile: "Profile", education: "Education", experience: "Experience", projects: "Projects", publications: "Publications", skills: "Skills" },
+    status: { loaded: "Previous resume loaded", restored: "Last edit restored", readError: "Local draft could not be read", saving: "Saving…", saved: "Autosaved", exported: "Data exported", imported: "Data imported", importError: "Import failed: invalid JSON", reset: "Defaults restored" },
+    personalWorkspace: "PERSONAL WORKSPACE",
+    language: "Interface language",
+    reset: "Reset",
+    importJson: "Import JSON",
+    exportJson: "Export JSON",
+    exportPdf: "Export PDF",
+    content: "CONTENT",
+    editResume: "Edit resume",
+    resumeSections: "Resume sections",
+    localOnly: "Stored on this device",
+    localOnlyBody: "Your resume content is never uploaded to the server.",
+    livePreview: "LIVE PREVIEW",
+    liveLayout: "Live layout",
+    paper: "Paper",
+    zoom: "Zoom",
+    pdfTemplates: "PDF templates",
+    templateDescriptions: { Scholar: "Academic classic", Modern: "Modern research", Compact: "Compact one-page" },
+    printHint: "Choose “Save as PDF” in the system print dialog. Your template and paper settings will be preserved.",
+    profileFields: { name: "Name", headline: "Research focus / professional title", email: "Email", phone: "Phone", location: "Location", website: "Personal website", github: "GitHub", linkedin: "LinkedIn", updated: "Updated", summary: "Summary" },
+    itemFields: { title: "Title", publicationTitle: "Publication title", category: "Category", organization: "Organization / subtitle", authors: "Authors", skillList: "Skills (separate with ·)", location: "Location / status", date: "Date / venue", bullets: "Highlights (one per line)" },
+    newItem: { education: "New institution", experience: "New role", projects: "New project", publications: "New publication", skills: "New skill group" },
+    moveUp: "Move up",
+    moveDown: "Move down",
+    delete: "Delete",
+    add: "Add",
+    confirmReset: "Restore the original imported resume? Your current edits will be replaced.",
+  },
+  zh: {
+    sectionLabels: { profile: "个人信息", education: "教育经历", experience: "工作经历", projects: "项目经历", publications: "论文发表", skills: "技能方向" },
+    status: { loaded: "已载入旧简历", restored: "已恢复上次编辑", readError: "本地草稿无法读取", saving: "保存中…", saved: "已自动保存", exported: "数据已导出", imported: "数据已导入", importError: "导入失败：JSON 格式不正确", reset: "已恢复初始内容" },
+    personalWorkspace: "个人工作台",
+    language: "界面语言",
+    reset: "恢复初始",
+    importJson: "导入 JSON",
+    exportJson: "导出 JSON",
+    exportPdf: "导出 PDF",
+    content: "内容",
+    editResume: "编辑简历",
+    resumeSections: "简历区块",
+    localOnly: "仅保存在本机",
+    localOnlyBody: "你的简历内容不会上传到服务器。",
+    livePreview: "实时预览",
+    liveLayout: "实时排版",
+    paper: "纸张",
+    zoom: "缩放",
+    pdfTemplates: "PDF 模板",
+    templateDescriptions: { Scholar: "学术经典", Modern: "现代研究", Compact: "紧凑单页" },
+    printHint: "点击“导出 PDF”后，在系统窗口中选择“存储为 PDF”。模板与纸张设置会保留。",
+    profileFields: { name: "姓名", headline: "研究方向 / 职业标题", email: "邮箱", phone: "电话", location: "所在地", website: "个人主页", github: "GitHub", linkedin: "LinkedIn", updated: "更新日期", summary: "个人简介" },
+    itemFields: { title: "标题", publicationTitle: "论文标题", category: "类别", organization: "机构 / 副标题", authors: "作者", skillList: "技能（使用 · 分隔）", location: "地点 / 状态", date: "日期 / 会议信息", bullets: "要点（每行一条）" },
+    newItem: { education: "新学校", experience: "新职位", projects: "新项目", publications: "新论文", skills: "新技能类别" },
+    moveUp: "上移",
+    moveDown: "下移",
+    delete: "删除",
+    add: "添加",
+    confirmReset: "恢复为从旧简历导入的初始内容？当前修改会被覆盖。",
+  },
 };
 
-const tabs = Object.keys(sectionLabels) as SectionKey[];
+const tabs: SectionKey[] = ["profile", "education", "experience", "projects", "publications", "skills"];
 const resumeContentVersion = 3;
 
 const teraFullTimeExperience: ResumeItem = {
@@ -137,10 +193,12 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
   const [activeSection, setActiveSection] = useState<SectionKey>("profile");
   const [template, setTemplate] = useState<Template>(initialTemplate);
   const [pageSize, setPageSize] = useState<PageSize>(initialPageSize);
+  const [locale, setLocale] = useState<Locale>("en");
   const [zoom, setZoom] = useState(90);
   const [ready, setReady] = useState(false);
-  const [status, setStatus] = useState("已载入旧简历");
+  const [status, setStatus] = useState<StatusKey>("loaded");
   const fileInput = useRef<HTMLInputElement>(null);
+  const copy = translations[locale];
 
   useEffect(() => {
     try {
@@ -150,7 +208,8 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
         if (parsed.resume) setResume(migrateSavedResume(parsed));
         if (parsed.template) setTemplate(parsed.template);
         if (parsed.pageSize) setPageSize(parsed.pageSize);
-        setStatus("已恢复上次编辑");
+        if (parsed.locale === "en" || parsed.locale === "zh") setLocale(parsed.locale);
+        setStatus("restored");
       }
       const params = new URLSearchParams(window.location.search);
       const requestedTemplate = params.get("template");
@@ -158,31 +217,34 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
       if (["Scholar", "Modern", "Compact"].includes(requestedTemplate || "")) setTemplate(requestedTemplate as Template);
       if (["letter", "a4"].includes(requestedPage || "")) setPageSize(requestedPage as PageSize);
     } catch {
-      setStatus("本地草稿无法读取");
+      setStatus("readError");
     }
     setReady(true);
   }, []);
 
   useEffect(() => {
     if (!ready) return;
-    localStorage.setItem("tommy-resume-studio-v1", JSON.stringify({ resume, template, pageSize, contentVersion: resumeContentVersion }));
-    const timer = window.setTimeout(() => setStatus("已自动保存"), 250);
+    localStorage.setItem("tommy-resume-studio-v1", JSON.stringify({ resume, template, pageSize, locale, contentVersion: resumeContentVersion }));
+    const timer = window.setTimeout(() => setStatus("saved"), 250);
     return () => window.clearTimeout(timer);
-  }, [resume, template, pageSize, ready]);
+  }, [resume, template, pageSize, locale, ready]);
+
+  useEffect(() => {
+    document.documentElement.lang = locale === "zh" ? "zh-CN" : "en";
+  }, [locale]);
 
   const updateProfile = (field: keyof ResumeData["profile"], value: string) => {
     setResume((current) => ({ ...current, profile: { ...current.profile, [field]: value } }));
-    setStatus("保存中…");
+    setStatus("saving");
   };
 
   const updateItem = (section: Exclude<SectionKey, "profile">, id: string, field: keyof ResumeItem, value: string | string[]) => {
     setResume((current) => ({ ...current, [section]: current[section].map((item) => item.id === id ? { ...item, [field]: value } : item) }));
-    setStatus("保存中…");
+    setStatus("saving");
   };
 
   const addItem = (section: Exclude<SectionKey, "profile">) => {
-    const title: Record<typeof section, string> = { education: "New institution", experience: "New role", projects: "New project", publications: "New publication", skills: "New skill group" };
-    setResume((current) => ({ ...current, [section]: [...current[section], { id: makeId(), title: title[section], subtitle: "", location: "", date: "", bullets: [] }] }));
+    setResume((current) => ({ ...current, [section]: [...current[section], { id: makeId(), title: copy.newItem[section], subtitle: "", location: "", date: "", bullets: [] }] }));
   };
 
   const removeItem = (section: Exclude<SectionKey, "profile">, id: string) => {
@@ -207,7 +269,7 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
     link.download = "chenghao-jiang-resume.json";
     link.click();
     URL.revokeObjectURL(href);
-    setStatus("数据已导出");
+    setStatus("exported");
   };
 
   const importData = (event: ChangeEvent<HTMLInputElement>) => {
@@ -219,9 +281,9 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
         const parsed = JSON.parse(String(reader.result));
         if (!parsed.profile || !parsed.education || !parsed.experience) throw new Error("Invalid resume");
         setResume(parsed);
-        setStatus("数据已导入");
+        setStatus("imported");
       } catch {
-        setStatus("导入失败：JSON 格式不正确");
+        setStatus("importError");
       }
       event.target.value = "";
     };
@@ -229,11 +291,11 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
   };
 
   const resetResume = () => {
-    if (window.confirm("恢复为从旧简历导入的初始内容？当前修改会被覆盖。")) {
+    if (window.confirm(copy.confirmReset)) {
       setResume(cloneInitial());
       setTemplate("Scholar");
       setPageSize("letter");
-      setStatus("已恢复初始内容");
+      setStatus("reset");
     }
   };
 
@@ -242,15 +304,19 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
       <header className="studio-header no-print">
         <div className="brand-mark">T</div>
         <div>
-          <p className="eyebrow">PERSONAL WORKSPACE</p>
+          <p className="eyebrow">{copy.personalWorkspace}</p>
           <h1>Resume Studio</h1>
         </div>
         <div className="header-actions">
-          <span className="saved-dot">{status}</span>
-          <button className="text-button" onClick={resetResume}>恢复初始</button>
-          <button className="secondary-button" onClick={() => fileInput.current?.click()}>导入 JSON</button>
-          <button className="secondary-button" onClick={exportData}>导出 JSON</button>
-          <button className="primary-button" onClick={() => window.print()}>导出 PDF</button>
+          <div className="language-switch" role="group" aria-label={copy.language}>
+            <button className={locale === "en" ? "active" : ""} onClick={() => setLocale("en")}>EN</button>
+            <button className={locale === "zh" ? "active" : ""} onClick={() => setLocale("zh")}>中文</button>
+          </div>
+          <span className="saved-dot">{copy.status[status]}</span>
+          <button className="text-button" onClick={resetResume}>{copy.reset}</button>
+          <button className="secondary-button" onClick={() => fileInput.current?.click()}>{copy.importJson}</button>
+          <button className="secondary-button" onClick={exportData}>{copy.exportJson}</button>
+          <button className="primary-button" onClick={() => window.print()}>{copy.exportPdf}</button>
           <input ref={fileInput} className="visually-hidden" type="file" accept="application/json" onChange={importData} />
         </div>
       </header>
@@ -258,18 +324,19 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
       <section className="studio-workspace">
         <aside className="editor-panel no-print">
           <div className="panel-heading">
-            <div><p className="eyebrow">CONTENT</p><h2>编辑简历</h2></div>
+            <div><p className="eyebrow">{copy.content}</p><h2>{copy.editResume}</h2></div>
             <span className="step-count">{String(tabs.indexOf(activeSection) + 1).padStart(2, "0")} / 06</span>
           </div>
-          <nav className="section-tabs" aria-label="简历区块">
-            {tabs.map((tab) => <button key={tab} className={activeSection === tab ? "active" : ""} onClick={() => setActiveSection(tab)}>{sectionLabels[tab]}</button>)}
+          <nav className="section-tabs" aria-label={copy.resumeSections}>
+            {tabs.map((tab) => <button key={tab} className={activeSection === tab ? "active" : ""} onClick={() => setActiveSection(tab)}>{copy.sectionLabels[tab]}</button>)}
           </nav>
 
           {activeSection === "profile" ? (
-            <ProfileEditor profile={resume.profile} onChange={updateProfile} />
+            <ProfileEditor profile={resume.profile} locale={locale} onChange={updateProfile} />
           ) : (
             <ItemsEditor
               section={activeSection}
+              locale={locale}
               items={resume[activeSection]}
               onAdd={() => addItem(activeSection)}
               onRemove={(id) => removeItem(activeSection, id)}
@@ -277,53 +344,55 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
               onChange={(id, field, value) => updateItem(activeSection, id, field, value)}
             />
           )}
-          <div className="privacy-note"><span>●</span><p><strong>仅保存在本机</strong><br />你的简历内容不会上传到服务器。</p></div>
+          <div className="privacy-note"><span>●</span><p><strong>{copy.localOnly}</strong><br />{copy.localOnlyBody}</p></div>
         </aside>
 
         <section className="preview-panel">
           <div className="preview-toolbar no-print">
-            <div><p className="eyebrow">LIVE PREVIEW</p><strong>{pageSize === "letter" ? "US Letter" : "A4"} · 实时排版</strong></div>
+            <div><p className="eyebrow">{copy.livePreview}</p><strong>{pageSize === "letter" ? "US Letter" : "A4"} · {copy.liveLayout}</strong></div>
             <div className="toolbar-controls">
-              <label className="select-control"><span>纸张</span><select value={pageSize} onChange={(event) => setPageSize(event.target.value as PageSize)}><option value="letter">Letter</option><option value="a4">A4</option></select></label>
-              <label className="select-control zoom-control"><span>缩放</span><input type="range" min="60" max="110" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} /><b>{zoom}%</b></label>
+              <label className="select-control"><span>{copy.paper}</span><select value={pageSize} onChange={(event) => setPageSize(event.target.value as PageSize)}><option value="letter">Letter</option><option value="a4">A4</option></select></label>
+              <label className="select-control zoom-control"><span>{copy.zoom}</span><input type="range" min="60" max="110" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} /><b>{zoom}%</b></label>
             </div>
           </div>
-          <div className="template-rail no-print" aria-label="PDF 模板">
+          <div className="template-rail no-print" aria-label={copy.pdfTemplates}>
             {(["Scholar", "Modern", "Compact"] as Template[]).map((item) => (
-              <button key={item} className={template === item ? "active" : ""} onClick={() => setTemplate(item)}><span className={`template-swatch swatch-${item.toLowerCase()}`} /><span><strong>{item}</strong><small>{item === "Scholar" ? "学术经典" : item === "Modern" ? "现代研究" : "紧凑单页"}</small></span></button>
+              <button key={item} className={template === item ? "active" : ""} onClick={() => setTemplate(item)}><span className={`template-swatch swatch-${item.toLowerCase()}`} /><span><strong>{item}</strong><small>{copy.templateDescriptions[item]}</small></span></button>
             ))}
           </div>
 
           <div className="paper-stage">
             <ResumePaper resume={resume} template={template} pageSize={pageSize} zoom={zoom} />
           </div>
-          <p className="print-hint no-print">点击“导出 PDF”后，在系统窗口中选择“存储为 PDF”。模板与纸张设置会保留。</p>
+          <p className="print-hint no-print">{copy.printHint}</p>
         </section>
       </section>
     </main>
   );
 }
 
-function ProfileEditor({ profile, onChange }: { profile: ResumeData["profile"]; onChange: (field: keyof ResumeData["profile"], value: string) => void }) {
+function ProfileEditor({ profile, locale, onChange }: { profile: ResumeData["profile"]; locale: Locale; onChange: (field: keyof ResumeData["profile"], value: string) => void }) {
+  const labels = translations[locale].profileFields;
   const fields: Array<[keyof typeof profile, string, "input" | "textarea"]> = [
-    ["name", "姓名", "input"], ["headline", "研究方向 / 职业标题", "input"], ["email", "邮箱", "input"], ["phone", "电话", "input"], ["location", "所在地", "input"], ["website", "个人主页", "input"], ["github", "GitHub", "input"], ["linkedin", "LinkedIn", "input"], ["updated", "更新日期", "input"], ["summary", "个人简介", "textarea"],
+    ["name", labels.name, "input"], ["headline", labels.headline, "input"], ["email", labels.email, "input"], ["phone", labels.phone, "input"], ["location", labels.location, "input"], ["website", labels.website, "input"], ["github", labels.github, "input"], ["linkedin", labels.linkedin, "input"], ["updated", labels.updated, "input"], ["summary", labels.summary, "textarea"],
   ];
   return <div className="form-stack profile-grid">{fields.map(([field, label, type]) => <label key={field} className={field === "summary" || field === "headline" ? "field-wide" : ""}><span>{label}</span>{type === "textarea" ? <textarea rows={4} value={profile[field]} onChange={(event) => onChange(field, event.target.value)} /> : <input value={profile[field]} onChange={(event) => onChange(field, event.target.value)} />}</label>)}</div>;
 }
 
-function ItemsEditor({ section, items, onAdd, onRemove, onMove, onChange }: { section: Exclude<SectionKey, "profile">; items: ResumeItem[]; onAdd: () => void; onRemove: (id: string) => void; onMove: (index: number, direction: -1 | 1) => void; onChange: (id: string, field: keyof ResumeItem, value: string | string[]) => void }) {
+function ItemsEditor({ section, locale, items, onAdd, onRemove, onMove, onChange }: { section: Exclude<SectionKey, "profile">; locale: Locale; items: ResumeItem[]; onAdd: () => void; onRemove: (id: string) => void; onMove: (index: number, direction: -1 | 1) => void; onChange: (id: string, field: keyof ResumeItem, value: string | string[]) => void }) {
+  const copy = translations[locale];
   return <div className="items-editor">
     {items.map((item, index) => <article className="item-card" key={item.id}>
-      <div className="item-card-heading"><span>{String(index + 1).padStart(2, "0")}</span><div><button aria-label="上移" disabled={index === 0} onClick={() => onMove(index, -1)}>↑</button><button aria-label="下移" disabled={index === items.length - 1} onClick={() => onMove(index, 1)}>↓</button><button className="danger" onClick={() => onRemove(item.id)}>删除</button></div></div>
+      <div className="item-card-heading"><span>{String(index + 1).padStart(2, "0")}</span><div><button aria-label={copy.moveUp} disabled={index === 0} onClick={() => onMove(index, -1)}>↑</button><button aria-label={copy.moveDown} disabled={index === items.length - 1} onClick={() => onMove(index, 1)}>↓</button><button className="danger" onClick={() => onRemove(item.id)}>{copy.delete}</button></div></div>
       <div className="form-stack compact-form">
-        <label className="field-wide"><span>{section === "publications" ? "论文标题" : section === "skills" ? "类别" : "标题"}</span><input value={item.title} onChange={(e) => onChange(item.id, "title", e.target.value)} /></label>
-        <label className="field-wide"><span>{section === "publications" ? "作者" : section === "skills" ? "技能（使用 · 分隔）" : "机构 / 副标题"}</span><input value={item.subtitle} onChange={(e) => onChange(item.id, "subtitle", e.target.value)} /></label>
-        <label><span>地点 / 状态</span><input value={item.location} onChange={(e) => onChange(item.id, "location", e.target.value)} /></label>
-        <label><span>日期 / 会议信息</span><input value={item.date} onChange={(e) => onChange(item.id, "date", e.target.value)} /></label>
-        {section !== "skills" && section !== "publications" && <label className="field-wide"><span>要点（每行一条）</span><textarea rows={5} value={item.bullets.join("\n")} onChange={(e) => onChange(item.id, "bullets", e.target.value.split("\n"))} /></label>}
+        <label className="field-wide"><span>{section === "publications" ? copy.itemFields.publicationTitle : section === "skills" ? copy.itemFields.category : copy.itemFields.title}</span><input value={item.title} onChange={(e) => onChange(item.id, "title", e.target.value)} /></label>
+        <label className="field-wide"><span>{section === "publications" ? copy.itemFields.authors : section === "skills" ? copy.itemFields.skillList : copy.itemFields.organization}</span><input value={item.subtitle} onChange={(e) => onChange(item.id, "subtitle", e.target.value)} /></label>
+        <label><span>{copy.itemFields.location}</span><input value={item.location} onChange={(e) => onChange(item.id, "location", e.target.value)} /></label>
+        <label><span>{copy.itemFields.date}</span><input value={item.date} onChange={(e) => onChange(item.id, "date", e.target.value)} /></label>
+        {section !== "skills" && section !== "publications" && <label className="field-wide"><span>{copy.itemFields.bullets}</span><textarea rows={5} value={item.bullets.join("\n")} onChange={(e) => onChange(item.id, "bullets", e.target.value.split("\n"))} /></label>}
       </div>
     </article>)}
-    <button className="add-button" onClick={onAdd}>＋ 添加{sectionLabels[section]}</button>
+    <button className="add-button" onClick={onAdd}>＋ {copy.add} {copy.sectionLabels[section]}</button>
   </div>;
 }
 
