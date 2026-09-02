@@ -103,32 +103,54 @@ const translations = {
 };
 
 const tabs: SectionKey[] = ["profile", "education", "experience", "projects", "publications", "skills"];
-const resumeContentVersion = 3;
+const resumeContentVersion = 9;
 
-const teraFullTimeExperience: ResumeItem = {
-  id: "exp-tera-fulltime",
-  title: "Research Intern — Full-time",
+const jhuExperience: ResumeItem = {
+  id: "exp-jhu",
+  title: "Research Assistant · Advisor: Prof. Anand Bhattad",
+  subtitle: "Johns Hopkins University",
+  location: "Remote",
+  date: "Sep 2025 — Present",
+  bullets: [
+    "Designed a ViT-based image encoder that disentangles a photo into illumination (extrinsic) and scene content (intrinsic), with a decoder that reconstructs accurate images from combined representations.",
+    "Designed a DiT-based generative pipeline that takes lighting as a prompt and reference scene content as control, achieving high-quality vivid images.",
+  ],
+};
+
+const teraResearcherExperience: ResumeItem = {
+  id: "exp-tera-researcher",
+  title: "3D Vision Researcher",
   subtitle: "Tera AI",
   location: "Remote",
   date: "Feb 2026 — Aug 2026",
   bullets: [
-    "Built a training-data pipeline for a proprietary GPS-denied visual-navigation system, converting 132 pilot-collected flights (~660K frames) with images, poses, and depth into paired samples and dense point correspondences for learned matching.",
-    "Trained and evaluated a frame-to-frame correspondence model and integrated its predictions into pose optimization for aircraft localization, contributing to lower flight-level trajectory error after fine-tuning on internal data.",
-    "Developed a flight-replay and failure-diagnosis workflow that traced pair-level matching behavior to downstream ATE, distilling ~2.6K high-value hard frames into actionable failure modes for targeted model iteration.",
-    "Adapted and evaluated COLMAP, Depth Anything 3, MapAnything, and Gaussian Splatting to produce a high-fidelity 3D reconstruction from a challenging customer-provided ground-video sequence and deliver a visual demonstration to an aerospace partner.",
+    "Built a geometry-guided data pipeline to derive high-confidence geometric pseudo-labels for dense image correspondence from internally collected flight video and prior scene geometry, supporting model fine-tuning and held-out evaluation.",
+    "Evaluated and fine-tuned UFM as an efficient frame-to-frame correspondence frontend, improving robustness for long-horizon visual localization under practical latency constraints.",
+    "Developed a flight-replay diagnostic workflow that connected correspondence behavior to GPS-referenced trajectory error, isolating failures in matching, downstream pose processing, and geographic priors to guide targeted iteration.",
+    "Implemented and benchmarked 3D reconstruction pipelines spanning classical SfM, feed-forward 3D models, and Gaussian Splatting on internal flight video; evaluated Sim(3)-aligned point clouds by point-to-mesh distance and novel-view quality by held-out photometric error.",
   ],
 };
 
-const teraPartTimeExperience: ResumeItem = {
-  id: "exp-tera-parttime",
+const teraInternExperience: ResumeItem = {
+  id: "exp-tera-intern",
   title: "Research Intern — Part-time",
   subtitle: "Tera AI",
   location: "Remote",
   date: "Aug 2025 — Feb 2026",
   bullets: [
-    "Implemented keyframe selection and periodic global optimization for Stream3R, substantially reducing streaming-inference memory consumption and increasing supported sequence length.",
-    "Built a visual-odometry pipeline with a DINOv3 encoder for inter-frame correspondence matching and camera-trajectory reconstruction via a weighted eight-point algorithm.",
-    "Collected and curated real-world traffic imagery across times of day and weather conditions to support robust model training and evaluation.",
+    "Prototyped windowed deployment of STream3R for long-horizon flight video; identified memory growth and clip-level latency as blockers for real-time, edge-constrained localization, motivating an online correspondence-based frontend.",
+  ],
+};
+
+const hkustExperience: ResumeItem = {
+  id: "exp-hkust-ra",
+  title: "Research Assistant · Advisor: Prof. Haoang Li",
+  subtitle: "The Hong Kong University of Science and Technology (Guangzhou)",
+  location: "Remote",
+  date: "Nov 2023 — Jun 2024",
+  bullets: [
+    "Developed an animatable human Gaussian Splatting pipeline using a canonical avatar representation and SMPL-driven deformation across per-frame body poses.",
+    "Co-designed and implemented a correspondence-guided feature-consistency loss using RoMA matches and DINO features across viewpoints and body poses, complementing photometric supervision to enforce part-level appearance consistency under articulated motion.",
   ],
 };
 
@@ -151,9 +173,10 @@ const initialResume: ResumeData = {
     { id: "edu-ccust", title: "Changchun University of Science and Technology", subtitle: "BEng in Optoelectronic Information Science and Engineering", location: "Changchun, China", date: "Sep 2018 — Jun 2022", bullets: ["GPA: 3.86/5.00 · Rank: 10/221"] },
   ],
   experience: [
-    { id: "exp-jhu", title: "Research Assistant", subtitle: "Johns Hopkins University", location: "Remote", date: "Sep 2025 — Present", bullets: ["Designed a ViT-based image encoder that disentangles a photo into illumination (extrinsic) and scene content (intrinsic), with a decoder that reconstructs accurate images from combined representations.", "Designed a DiT-based generative pipeline that takes lighting as a prompt and reference scene content as control, achieving high-quality vivid images."] },
-    teraFullTimeExperience,
-    teraPartTimeExperience,
+    jhuExperience,
+    teraResearcherExperience,
+    teraInternExperience,
+    hkustExperience,
   ],
   projects: [
     { id: "project-sharp", title: "Privacy-Aware Sensor Data for Cooperative Perception", subtitle: "Supervised by Prof. Akarsh Prabhakara", location: "Madison, WI", date: "Jun 2025 — Jul 2025", bullets: ["Explored cooperative SLAM under privacy constraints using SHARP, transmitting pointmap-based novel-view renderings instead of raw images.", "Evaluated VGGT on the OPV2V dataset across ego-only, SHARP-generated, and raw multi-agent inputs.", "Extended the CARLA simulation in OPV2V with depth sensing for point-cloud rescaling and downstream 3D recovery."] },
@@ -176,14 +199,30 @@ function migrateSavedResume(saved: { resume?: ResumeData; contentVersion?: numbe
   if ((saved.contentVersion ?? 1) >= resumeContentVersion) return saved.resume;
 
   const next = JSON.parse(JSON.stringify(saved.resume)) as ResumeData;
-  const teraIndex = next.experience.findIndex((item) => ["exp-tera", "exp-tera-fulltime", "exp-tera-parttime"].includes(item.id));
-  next.experience = next.experience.filter((item) => !["exp-tera", "exp-tera-fulltime", "exp-tera-parttime"].includes(item.id));
-  next.experience.splice(
-    teraIndex >= 0 ? teraIndex : next.experience.length,
-    0,
-    JSON.parse(JSON.stringify(teraFullTimeExperience)),
-    JSON.parse(JSON.stringify(teraPartTimeExperience)),
-  );
+  const savedVersion = saved.contentVersion ?? 1;
+  if (savedVersion < 8) {
+    const teraIds = ["exp-tera", "exp-tera-fulltime", "exp-tera-parttime", "exp-tera-researcher", "exp-tera-intern"];
+    const teraIndex = next.experience.findIndex((item) => teraIds.includes(item.id));
+    next.experience = next.experience.filter((item) => !teraIds.includes(item.id));
+    next.experience.splice(
+      teraIndex >= 0 ? teraIndex : next.experience.length,
+      0,
+      JSON.parse(JSON.stringify(teraResearcherExperience)),
+      JSON.parse(JSON.stringify(teraInternExperience)),
+    );
+  }
+  if (savedVersion < 9) {
+    const jhu = next.experience.find((item) => item.id === "exp-jhu");
+    if (jhu) jhu.title = jhuExperience.title;
+    if (!next.experience.some((item) => item.id === hkustExperience.id)) {
+      const teraInternIndex = next.experience.findIndex((item) => item.id === teraInternExperience.id);
+      next.experience.splice(
+        teraInternIndex >= 0 ? teraInternIndex + 1 : next.experience.length,
+        0,
+        JSON.parse(JSON.stringify(hkustExperience)),
+      );
+    }
+  }
   if (next.profile.updated === "Dec 2025") next.profile.updated = "Aug 2026";
   return next;
 }
@@ -400,7 +439,6 @@ function ResumePaper({ resume, template, pageSize, zoom }: { resume: ResumeData;
   const p = resume.profile;
   return <article className={`resume-paper theme-${template.toLowerCase()} page-${pageSize}`} style={{ "--preview-scale": zoom / 100 } as React.CSSProperties}>
     <header className="resume-header">
-      <p className="resume-kicker">CURRICULUM VITAE <span>UPDATED {p.updated.toUpperCase()}</span></p>
       <h2>{p.name}</h2>
       <p className="resume-headline">{p.headline}</p>
       <div className="resume-contact">
@@ -409,8 +447,6 @@ function ResumePaper({ resume, template, pageSize, zoom }: { resume: ResumeData;
           {p.email && <ContactItem icon={FaRegEnvelope} href={`mailto:${p.email.trim()}`}>{p.email}</ContactItem>}
           {p.phone && <ContactItem icon={FaPhone} href={`tel:${p.phone.replace(/[^+\d]/g, "")}`}>{p.phone}</ContactItem>}
           {p.linkedin && <ContactItem icon={FaLinkedin} href={toProfileUrl(p.linkedin, "linkedin.com/in")}>{p.linkedin}</ContactItem>}
-        </div>
-        <div className="contact-row">
           {p.github && <ContactItem icon={FaGithub} href={toProfileUrl(p.github, "github.com")}>{p.github}</ContactItem>}
           {p.website && <ContactItem icon={FaLink} href={toExternalUrl(p.website)}>{p.website}</ContactItem>}
         </div>
@@ -418,11 +454,10 @@ function ResumePaper({ resume, template, pageSize, zoom }: { resume: ResumeData;
     </header>
     {p.summary && <p className="resume-summary">{p.summary}</p>}
     <ResumeSection title="Education"><ItemList items={resume.education} /></ResumeSection>
-    <ResumeSection title="Experience"><ItemList items={resume.experience} /></ResumeSection>
+    <ResumeSection title="Experience"><ExperienceList items={resume.experience} /></ResumeSection>
     <ResumeSection title="Selected Projects"><ItemList items={resume.projects} /></ResumeSection>
     {resume.publications.length > 0 && <ResumeSection title="Publications"><ItemList items={resume.publications} publication /></ResumeSection>}
     {resume.skills.length > 0 && <ResumeSection title="Skills"><ItemList items={resume.skills} skills /></ResumeSection>}
-    <footer className="resume-footer"><span>{p.name}</span>{p.website && <ResumeLink href={toExternalUrl(p.website)}>{p.website}</ResumeLink>}</footer>
   </article>;
 }
 
@@ -450,6 +485,37 @@ function toProfileUrl(value: string, host: string) {
 
 function ResumeSection({ title, children }: { title: string; children: ReactNode }) {
   return <section className="resume-section"><h3>{title}</h3>{children}</section>;
+}
+
+function ExperienceList({ items }: { items: ResumeItem[] }) {
+  const groups = items.reduce<Array<{ organization: string; location: string; roles: ResumeItem[] }>>((result, item) => {
+    const previous = result.at(-1);
+    if (previous && previous.organization === item.subtitle && previous.location === item.location) {
+      previous.roles.push(item);
+    } else {
+      result.push({ organization: item.subtitle, location: item.location, roles: [item] });
+    }
+    return result;
+  }, []);
+
+  return <>{groups.map((group) => {
+    const [onlyRole] = group.roles;
+    if (group.roles.length === 1) {
+      return <div className="resume-entry" key={onlyRole.id}>
+        <div className="entry-heading"><strong>{group.organization}</strong>{onlyRole.date && <span>{onlyRole.date}</span>}</div>
+        <div className="entry-subheading"><em>{onlyRole.title}</em>{group.location && <span>{group.location}</span>}</div>
+        {onlyRole.bullets.filter(Boolean).length > 0 && <ul>{onlyRole.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{bullet}</li>)}</ul>}
+      </div>;
+    }
+
+    return <div className="resume-entry experience-group" key={`${group.organization}-${group.roles.map((role) => role.id).join("-")}`}>
+      <div className="entry-heading"><strong>{group.organization}</strong>{group.location && <span>{group.location}</span>}</div>
+      {group.roles.map((role) => <div className="experience-role" key={role.id}>
+        <div className="entry-subheading"><em>{role.title}</em>{role.date && <span>{role.date}</span>}</div>
+        {role.bullets.filter(Boolean).length > 0 && <ul>{role.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{bullet}</li>)}</ul>}
+      </div>)}
+    </div>;
+  })}</>;
 }
 
 function ItemList({ items, publication = false, skills = false }: { items: ResumeItem[]; publication?: boolean; skills?: boolean }) {
