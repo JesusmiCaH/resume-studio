@@ -153,18 +153,18 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 
 /* Modern research template */
 .theme-modern { padding-top: 0; }
-.theme-modern .resume-header { text-align: left; background: #17201c; color: white; margin: 0 -.58in 9pt; padding: .2in .58in .14in; border: 0; border-bottom: 4px solid var(--accent); }
+.theme-modern .resume-header { text-align: left; background: #17201c; color: white; margin: 0 -.58in 10pt; padding: .3in .58in .16in; border: 0; border-bottom: 4px solid var(--accent); }
 .theme-modern .resume-header h2 { font-size: 21pt; }
 .theme-modern .resume-headline, .theme-modern .resume-contact { color: #d6dbd7; }
 .theme-modern .resume-contact { justify-items: start; }
 .theme-modern .contact-row { justify-content: flex-start; }
 .theme-modern .contact-item svg { color: var(--accent); }
 .theme-modern .resume-contact a:hover { color: var(--accent); }
-.theme-modern .resume-section h3 { color: #4d5b00; border-left: 5px solid var(--accent); padding-left: 6px; letter-spacing: .09em; }
+.theme-modern .resume-section h3 { color: #4d5b00; border-left: 5px solid var(--accent); padding-left: 6px; margin-bottom: 5.5pt; font-size: 10pt; letter-spacing: .08em; }
 .theme-modern .entry-heading strong { font-family: "Latin Modern Roman", "Times New Roman", serif; }
-.theme-modern .resume-section { margin-top: 5pt; }
-.theme-modern .resume-entry { margin-bottom: 4pt; }
-.theme-modern .resume-entry li { line-height: 1.23; }
+.theme-modern .resume-section { margin-top: 6.5pt; }
+.theme-modern .resume-entry { margin-bottom: 4.5pt; }
+.theme-modern .resume-entry li { line-height: 1.27; }
 
 /* Compact one-page template */
 .theme-compact { padding: .43in .46in .46in 2.1in; }
