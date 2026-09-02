@@ -146,6 +146,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .skill-entry { display: grid; grid-template-columns: 1.25in 1fr; margin-bottom: 3pt; }
 .skill-entry .entry-heading { display: block; }
 .skill-entry .entry-subheading { display: block; }
+.resume-updated { position: absolute; right: .58in; bottom: .18in; margin: 0; color: #989e9a; font: italic 7pt/1.1 "Latin Modern Roman", "Times New Roman", serif; letter-spacing: .01em; }
 .print-hint { text-align: center; color: #747d76; font-size: 10px; margin: -28px 0 0; }
 
 /* Scholar keeps a restrained academic hierarchy with a fine section rule. */
@@ -180,6 +181,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .theme-compact .resume-section { margin-top: 5pt; }
 .theme-compact .resume-entry { margin-bottom: 4pt; }
 .theme-compact .resume-section h3 { border-bottom: 1px solid #29332d; padding-bottom: 3pt; }
+.theme-compact .resume-updated { right: .46in; }
 
 @media (max-width: 1080px) {
   .header-actions .text-button, .saved-dot { display: none; }

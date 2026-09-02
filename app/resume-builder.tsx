@@ -490,6 +490,7 @@ function ResumePaper({ resume, template, pageSize, zoom, onOverflowChange }: { r
     <ResumeSection title="Selected Projects"><ItemList items={resume.projects} /></ResumeSection>
     {resume.publications.length > 0 && <ResumeSection title="Publications"><ItemList items={resume.publications} publication /></ResumeSection>}
     {resume.skills.length > 0 && <ResumeSection title="Skills"><ItemList items={resume.skills} skills /></ResumeSection>}
+    {p.updated && <footer className="resume-updated">Last updated · {p.updated}</footer>}
   </article>;
 }
 
