@@ -29,7 +29,6 @@ type ResumeData = {
     website: string;
     github: string;
     linkedin: string;
-    summary: string;
     updated: string;
   };
   education: ResumeItem[];
@@ -56,12 +55,14 @@ const translations = {
     localOnlyBody: "Your resume content is never uploaded to the server.",
     livePreview: "LIVE PREVIEW",
     liveLayout: "Live layout",
+    fitsPage: "Fits one page",
+    overflowsPage: "Content exceeds one page",
     paper: "Paper",
     zoom: "Zoom",
     pdfTemplates: "PDF templates",
     templateDescriptions: { Scholar: "Academic classic", Modern: "Modern research", Compact: "Compact one-page" },
     printHint: "Choose “Save as PDF” in the system print dialog. Your template and paper settings will be preserved.",
-    profileFields: { name: "Name", headline: "Research focus / professional title", email: "Email", phone: "Phone", location: "Location", website: "Personal website", github: "GitHub", linkedin: "LinkedIn", updated: "Updated", summary: "Summary" },
+    profileFields: { name: "Name", headline: "Research focus / professional title", email: "Email", phone: "Phone", location: "Location", website: "Personal website", github: "GitHub", linkedin: "LinkedIn", updated: "Updated" },
     itemFields: { title: "Title", publicationTitle: "Publication title", category: "Category", organization: "Organization / subtitle", authors: "Authors", skillList: "Skills (separate with ·)", location: "Location / status", date: "Date / venue", bullets: "Highlights (one per line)" },
     newItem: { education: "New institution", experience: "New role", projects: "New project", publications: "New publication", skills: "New skill group" },
     moveUp: "Move up",
@@ -86,12 +87,14 @@ const translations = {
     localOnlyBody: "你的简历内容不会上传到服务器。",
     livePreview: "实时预览",
     liveLayout: "实时排版",
+    fitsPage: "适合一页",
+    overflowsPage: "内容超出一页",
     paper: "纸张",
     zoom: "缩放",
     pdfTemplates: "PDF 模板",
     templateDescriptions: { Scholar: "学术经典", Modern: "现代研究", Compact: "紧凑单页" },
     printHint: "点击“导出 PDF”后，在系统窗口中选择“存储为 PDF”。模板与纸张设置会保留。",
-    profileFields: { name: "姓名", headline: "研究方向 / 职业标题", email: "邮箱", phone: "电话", location: "所在地", website: "个人主页", github: "GitHub", linkedin: "LinkedIn", updated: "更新日期", summary: "个人简介" },
+    profileFields: { name: "姓名", headline: "研究方向 / 职业标题", email: "邮箱", phone: "电话", location: "所在地", website: "个人主页", github: "GitHub", linkedin: "LinkedIn", updated: "更新日期" },
     itemFields: { title: "标题", publicationTitle: "论文标题", category: "类别", organization: "机构 / 副标题", authors: "作者", skillList: "技能（使用 · 分隔）", location: "地点 / 状态", date: "日期 / 会议信息", bullets: "要点（每行一条）" },
     newItem: { education: "新学校", experience: "新职位", projects: "新项目", publications: "新论文", skills: "新技能类别" },
     moveUp: "上移",
@@ -103,7 +106,7 @@ const translations = {
 };
 
 const tabs: SectionKey[] = ["profile", "education", "experience", "projects", "publications", "skills"];
-const resumeContentVersion = 9;
+const resumeContentVersion = 10;
 
 const jhuExperience: ResumeItem = {
   id: "exp-jhu",
@@ -164,11 +167,10 @@ const initialResume: ResumeData = {
     website: "jesusmicah.github.io",
     github: "JesusmiCaH",
     linkedin: "Chenghao-Jiang",
-    summary: "Researcher building robust 3D perception and generative vision systems for real-world environments.",
     updated: "Aug 2026",
   },
   education: [
-    { id: "edu-uw", title: "University of Wisconsin–Madison", subtitle: "MS in Electrical and Computer Engineering", location: "Madison, WI", date: "Sep 2024 — Dec 2025", bullets: ["Coursework: Learning-based Image Synthesis, High Performance Computing, Reinforcement Learning"] },
+    { id: "edu-uw", title: "University of Wisconsin–Madison", subtitle: "MS in Electrical and Computer Engineering", location: "Madison, WI", date: "Sep 2024 — Dec 2025", bullets: [] },
     { id: "edu-uom", title: "University of Manchester", subtitle: "MS in Communication and Signal Processing", location: "Manchester, UK", date: "Sep 2022 — Dec 2023", bullets: ["GPA: 75.5/100 · Distinction Honor"] },
     { id: "edu-ccust", title: "Changchun University of Science and Technology", subtitle: "BEng in Optoelectronic Information Science and Engineering", location: "Changchun, China", date: "Sep 2018 — Jun 2022", bullets: ["GPA: 3.86/5.00 · Rank: 10/221"] },
   ],
@@ -180,13 +182,12 @@ const initialResume: ResumeData = {
   ],
   projects: [
     { id: "project-sharp", title: "Privacy-Aware Sensor Data for Cooperative Perception", subtitle: "Supervised by Prof. Akarsh Prabhakara", location: "Madison, WI", date: "Jun 2025 — Jul 2025", bullets: ["Explored cooperative SLAM under privacy constraints using SHARP, transmitting pointmap-based novel-view renderings instead of raw images.", "Evaluated VGGT on the OPV2V dataset across ego-only, SHARP-generated, and raw multi-agent inputs.", "Extended the CARLA simulation in OPV2V with depth sensing for point-cloud rescaling and downstream 3D recovery."] },
-    { id: "project-roma", title: "RoMA-SLAM: Robust SLAM Based on Dense Matching", subtitle: "Supervised by Prof. Mohit Gupta", location: "Madison, WI", date: "Feb 2025 — May 2025", bullets: ["Designed a RoMA-based SLAM pipeline inspired by MASt3R-SLAM, using dense matching and SVD-based pose estimation.", "Built a keyframe-driven backend with global pose-graph optimization for loop closures and inter-frame correspondences.", "Implemented post-optimization triangulation for accurate multi-view 3D reconstruction."] },
   ],
   publications: [
     { id: "pub-hotmobile", title: "Privacy-Aware Sharing of Raw Spatial Sensor Data for Cooperative Perception", subtitle: "Bangya Liu, Chenghao Jiang, Chengpo Yan, Suman Banerjee, Akarsh Prabhakara", location: "Under review", date: "HotMobile 2026", bullets: [] },
   ],
   skills: [
-    { id: "skill-stack", title: "Programming & ML", subtitle: "Python · CUDA · PyTorch · LaTeX", location: "", date: "", bullets: [] },
+    { id: "skill-stack", title: "Programming", subtitle: "Python · CUDA · PyTorch · LaTeX", location: "", date: "", bullets: [] },
     { id: "skill-research", title: "Research", subtitle: "3D reconstruction · SLAM · Gaussian Splatting · Diffusion Models · VLMs", location: "", date: "", bullets: [] },
   ],
 };
@@ -223,6 +224,14 @@ function migrateSavedResume(saved: { resume?: ResumeData; contentVersion?: numbe
       );
     }
   }
+  if (savedVersion < 10) {
+    next.projects = next.projects.filter((item) => item.id !== "project-roma");
+    const uwMadison = next.education.find((item) => item.id === "edu-uw");
+    if (uwMadison) uwMadison.bullets = uwMadison.bullets.filter((bullet) => !/^Coursework:/i.test(bullet.trim()));
+    const programming = next.skills.find((item) => item.id === "skill-stack");
+    if (programming) programming.title = "Programming";
+    delete (next.profile as ResumeData["profile"] & { summary?: string }).summary;
+  }
   if (next.profile.updated === "Dec 2025") next.profile.updated = "Aug 2026";
   return next;
 }
@@ -234,6 +243,7 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
   const [pageSize, setPageSize] = useState<PageSize>(initialPageSize);
   const [locale, setLocale] = useState<Locale>("en");
   const [zoom, setZoom] = useState(90);
+  const [pageOverflow, setPageOverflow] = useState(false);
   const [ready, setReady] = useState(false);
   const [status, setStatus] = useState<StatusKey>("loaded");
   const fileInput = useRef<HTMLInputElement>(null);
@@ -339,6 +349,8 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
   };
 
   return (
+    <>
+    <style>{`@page { size: ${pageSize === "a4" ? "A4" : "Letter"}; margin: 0; }`}</style>
     <main className="studio-shell">
       <header className="studio-header no-print">
         <div className="brand-mark">T</div>
@@ -388,7 +400,7 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
 
         <section className="preview-panel">
           <div className="preview-toolbar no-print">
-            <div><p className="eyebrow">{copy.livePreview}</p><strong>{pageSize === "letter" ? "US Letter" : "A4"} · {copy.liveLayout}</strong></div>
+            <div><p className="eyebrow">{copy.livePreview}</p><strong>{pageSize === "letter" ? "US Letter" : "A4"} · {copy.liveLayout}<span className={`page-fit-badge ${pageOverflow ? "overflowing" : "fits"}`}>{pageOverflow ? copy.overflowsPage : copy.fitsPage}</span></strong></div>
             <div className="toolbar-controls">
               <label className="select-control"><span>{copy.paper}</span><select value={pageSize} onChange={(event) => setPageSize(event.target.value as PageSize)}><option value="letter">Letter</option><option value="a4">A4</option></select></label>
               <label className="select-control zoom-control"><span>{copy.zoom}</span><input type="range" min="60" max="110" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} /><b>{zoom}%</b></label>
@@ -401,21 +413,22 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
           </div>
 
           <div className="paper-stage">
-            <ResumePaper resume={resume} template={template} pageSize={pageSize} zoom={zoom} />
+            <ResumePaper resume={resume} template={template} pageSize={pageSize} zoom={zoom} onOverflowChange={setPageOverflow} />
           </div>
           <p className="print-hint no-print">{copy.printHint}</p>
         </section>
       </section>
     </main>
+    </>
   );
 }
 
 function ProfileEditor({ profile, locale, onChange }: { profile: ResumeData["profile"]; locale: Locale; onChange: (field: keyof ResumeData["profile"], value: string) => void }) {
   const labels = translations[locale].profileFields;
   const fields: Array<[keyof typeof profile, string, "input" | "textarea"]> = [
-    ["name", labels.name, "input"], ["headline", labels.headline, "input"], ["email", labels.email, "input"], ["phone", labels.phone, "input"], ["location", labels.location, "input"], ["website", labels.website, "input"], ["github", labels.github, "input"], ["linkedin", labels.linkedin, "input"], ["updated", labels.updated, "input"], ["summary", labels.summary, "textarea"],
+    ["name", labels.name, "input"], ["headline", labels.headline, "input"], ["email", labels.email, "input"], ["phone", labels.phone, "input"], ["location", labels.location, "input"], ["website", labels.website, "input"], ["github", labels.github, "input"], ["linkedin", labels.linkedin, "input"], ["updated", labels.updated, "input"],
   ];
-  return <div className="form-stack profile-grid">{fields.map(([field, label, type]) => <label key={field} className={field === "summary" || field === "headline" ? "field-wide" : ""}><span>{label}</span>{type === "textarea" ? <textarea rows={4} value={profile[field]} onChange={(event) => onChange(field, event.target.value)} /> : <input value={profile[field]} onChange={(event) => onChange(field, event.target.value)} />}</label>)}</div>;
+  return <div className="form-stack profile-grid">{fields.map(([field, label, type]) => <label key={field} className={field === "headline" ? "field-wide" : ""}><span>{label}</span>{type === "textarea" ? <textarea rows={4} value={profile[field]} onChange={(event) => onChange(field, event.target.value)} /> : <input value={profile[field]} onChange={(event) => onChange(field, event.target.value)} />}</label>)}</div>;
 }
 
 function ItemsEditor({ section, locale, items, onAdd, onRemove, onMove, onChange }: { section: Exclude<SectionKey, "profile">; locale: Locale; items: ResumeItem[]; onAdd: () => void; onRemove: (id: string) => void; onMove: (index: number, direction: -1 | 1) => void; onChange: (id: string, field: keyof ResumeItem, value: string | string[]) => void }) {
@@ -435,9 +448,29 @@ function ItemsEditor({ section, locale, items, onAdd, onRemove, onMove, onChange
   </div>;
 }
 
-function ResumePaper({ resume, template, pageSize, zoom }: { resume: ResumeData; template: Template; pageSize: PageSize; zoom: number }) {
+function ResumePaper({ resume, template, pageSize, zoom, onOverflowChange }: { resume: ResumeData; template: Template; pageSize: PageSize; zoom: number; onOverflowChange: (overflowing: boolean) => void }) {
   const p = resume.profile;
-  return <article className={`resume-paper theme-${template.toLowerCase()} page-${pageSize}`} style={{ "--preview-scale": zoom / 100 } as React.CSSProperties}>
+  const paperRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const paper = paperRef.current;
+    if (!paper) return;
+    let active = true;
+    const checkOverflow = () => {
+      if (active) onOverflowChange(paper.scrollHeight > paper.clientHeight + 1);
+    };
+    const frame = window.requestAnimationFrame(checkOverflow);
+    const observer = new ResizeObserver(checkOverflow);
+    observer.observe(paper);
+    document.fonts.ready.then(checkOverflow);
+    return () => {
+      active = false;
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [resume, template, pageSize, onOverflowChange]);
+
+  return <article ref={paperRef} className={`resume-paper theme-${template.toLowerCase()} page-${pageSize}`} style={{ "--preview-scale": zoom / 100 } as React.CSSProperties}>
     <header className="resume-header">
       <h2>{p.name}</h2>
       <p className="resume-headline">{p.headline}</p>
@@ -452,7 +485,6 @@ function ResumePaper({ resume, template, pageSize, zoom }: { resume: ResumeData;
         </div>
       </div>
     </header>
-    {p.summary && <p className="resume-summary">{p.summary}</p>}
     <ResumeSection title="Education"><ItemList items={resume.education} /></ResumeSection>
     <ResumeSection title="Experience"><ExperienceList items={resume.experience} /></ResumeSection>
     <ResumeSection title="Selected Projects"><ItemList items={resume.projects} /></ResumeSection>
