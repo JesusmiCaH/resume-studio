@@ -106,7 +106,7 @@ const translations = {
 };
 
 const tabs: SectionKey[] = ["profile", "education", "experience", "projects", "publications", "skills"];
-const resumeContentVersion = 11;
+const resumeContentVersion = 12;
 
 const jhuExperience: ResumeItem = {
   id: "exp-jhu",
@@ -163,7 +163,7 @@ const initialResume: ResumeData = {
     headline: "3D Computer Vision · SLAM · Generative Models",
     email: "tommyjiangch@gmail.com",
     phone: "(608) 867-9882",
-    location: "Glendale, CA",
+    location: "Los Angeles, CA",
     website: "jesusmicah.github.io",
     github: "JesusmiCaH",
     linkedin: "Chenghao-Jiang",
@@ -234,7 +234,9 @@ function migrateSavedResume(saved: { resume?: ResumeData; contentVersion?: numbe
   }
   if (savedVersion < 11) {
     next.profile.email = "tommyjiangch@gmail.com";
-    next.profile.location = "Glendale, CA";
+  }
+  if (savedVersion < 12) {
+    next.profile.location = "Los Angeles, CA";
   }
   if (next.profile.updated === "Dec 2025") next.profile.updated = "Aug 2026";
   return next;
