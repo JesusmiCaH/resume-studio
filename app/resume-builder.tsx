@@ -106,7 +106,7 @@ const translations = {
 };
 
 const tabs: SectionKey[] = ["profile", "education", "experience", "projects", "publications", "skills"];
-const resumeContentVersion = 10;
+const resumeContentVersion = 11;
 
 const jhuExperience: ResumeItem = {
   id: "exp-jhu",
@@ -161,9 +161,9 @@ const initialResume: ResumeData = {
   profile: {
     name: "Chenghao (Tommy) Jiang",
     headline: "3D Computer Vision · SLAM · Generative Models",
-    email: "cjiang239@wisc.edu",
+    email: "tommyjiangch@gmail.com",
     phone: "(608) 867-9882",
-    location: "Madison, Wisconsin",
+    location: "Glendale, CA",
     website: "jesusmicah.github.io",
     github: "JesusmiCaH",
     linkedin: "Chenghao-Jiang",
@@ -231,6 +231,10 @@ function migrateSavedResume(saved: { resume?: ResumeData; contentVersion?: numbe
     const programming = next.skills.find((item) => item.id === "skill-stack");
     if (programming) programming.title = "Programming";
     delete (next.profile as ResumeData["profile"] & { summary?: string }).summary;
+  }
+  if (savedVersion < 11) {
+    next.profile.email = "tommyjiangch@gmail.com";
+    next.profile.location = "Glendale, CA";
   }
   if (next.profile.updated === "Dec 2025") next.profile.updated = "Aug 2026";
   return next;
