@@ -106,14 +106,14 @@ const translations = {
 };
 
 const tabs: SectionKey[] = ["profile", "education", "experience", "projects", "publications", "skills"];
-const resumeContentVersion = 12;
+const resumeContentVersion = 13;
 
 const jhuExperience: ResumeItem = {
   id: "exp-jhu",
   title: "Research Assistant · Advisor: Prof. Anand Bhattad",
   subtitle: "Johns Hopkins University",
   location: "Remote",
-  date: "Sep 2025 — Present",
+  date: "Sep 2025 — Feb 2026",
   bullets: [
     "Designed a ViT-based image encoder that disentangles a photo into illumination (extrinsic) and scene content (intrinsic), with a decoder that reconstructs accurate images from combined representations.",
     "Designed a DiT-based generative pipeline that takes lighting as a prompt and reference scene content as control, achieving high-quality vivid images.",
@@ -125,7 +125,7 @@ const teraResearcherExperience: ResumeItem = {
   title: "3D Vision Researcher",
   subtitle: "Tera AI",
   location: "Remote",
-  date: "Feb 2026 — Aug 2026",
+  date: "Feb 2026 — Present",
   bullets: [
     "Built a geometry-guided data pipeline to derive high-confidence geometric pseudo-labels for dense image correspondence from internally collected flight video and prior scene geometry, supporting model fine-tuning and held-out evaluation.",
     "Evaluated and fine-tuned UFM as an efficient frame-to-frame correspondence frontend, improving robustness for long-horizon visual localization under practical latency constraints.",
@@ -161,7 +161,7 @@ const initialResume: ResumeData = {
   profile: {
     name: "Chenghao (Tommy) Jiang",
     headline: "3D Computer Vision · SLAM · Generative Models",
-    email: "tommyjiangch@gmail.com",
+    email: "1010851196jch@gmail.com",
     phone: "(608) 867-9882",
     location: "Los Angeles, CA",
     website: "jesusmicah.github.io",
@@ -170,14 +170,14 @@ const initialResume: ResumeData = {
     updated: "Aug 2026",
   },
   education: [
-    { id: "edu-uw", title: "University of Wisconsin–Madison", subtitle: "MS in Electrical and Computer Engineering", location: "Madison, WI", date: "Sep 2024 — Dec 2025", bullets: [] },
-    { id: "edu-uom", title: "University of Manchester", subtitle: "MS in Communication and Signal Processing", location: "Manchester, UK", date: "Sep 2022 — Dec 2023", bullets: ["GPA: 75.5/100 · Distinction Honor"] },
+    { id: "edu-uw", title: "University of Wisconsin–Madison", subtitle: "MS in Electrical and Computer Engineering", location: "Madison, WI", date: "Sep 2024 — Dec 2025", bullets: ["GPA: 3.82/4.0"] },
+    { id: "edu-uom", title: "University of Manchester", subtitle: "MS in Communication and Signal Processing", location: "Manchester, UK", date: "Sep 2022 — Dec 2023", bullets: ["GPA: 83.5/100 · Distinction Honor"] },
     { id: "edu-ccust", title: "Changchun University of Science and Technology", subtitle: "BEng in Optoelectronic Information Science and Engineering", location: "Changchun, China", date: "Sep 2018 — Jun 2022", bullets: ["GPA: 3.86/5.00 · Rank: 10/221"] },
   ],
   experience: [
-    jhuExperience,
     teraResearcherExperience,
     teraInternExperience,
+    jhuExperience,
     hkustExperience,
   ],
   projects: [
@@ -197,49 +197,8 @@ const makeId = () => typeof crypto !== "undefined" && crypto.randomUUID ? crypto
 
 function migrateSavedResume(saved: { resume?: ResumeData; contentVersion?: number }) {
   if (!saved.resume) return cloneInitial();
-  if ((saved.contentVersion ?? 1) >= resumeContentVersion) return saved.resume;
-
-  const next = JSON.parse(JSON.stringify(saved.resume)) as ResumeData;
-  const savedVersion = saved.contentVersion ?? 1;
-  if (savedVersion < 8) {
-    const teraIds = ["exp-tera", "exp-tera-fulltime", "exp-tera-parttime", "exp-tera-researcher", "exp-tera-intern"];
-    const teraIndex = next.experience.findIndex((item) => teraIds.includes(item.id));
-    next.experience = next.experience.filter((item) => !teraIds.includes(item.id));
-    next.experience.splice(
-      teraIndex >= 0 ? teraIndex : next.experience.length,
-      0,
-      JSON.parse(JSON.stringify(teraResearcherExperience)),
-      JSON.parse(JSON.stringify(teraInternExperience)),
-    );
-  }
-  if (savedVersion < 9) {
-    const jhu = next.experience.find((item) => item.id === "exp-jhu");
-    if (jhu) jhu.title = jhuExperience.title;
-    if (!next.experience.some((item) => item.id === hkustExperience.id)) {
-      const teraInternIndex = next.experience.findIndex((item) => item.id === teraInternExperience.id);
-      next.experience.splice(
-        teraInternIndex >= 0 ? teraInternIndex + 1 : next.experience.length,
-        0,
-        JSON.parse(JSON.stringify(hkustExperience)),
-      );
-    }
-  }
-  if (savedVersion < 10) {
-    next.projects = next.projects.filter((item) => item.id !== "project-roma");
-    const uwMadison = next.education.find((item) => item.id === "edu-uw");
-    if (uwMadison) uwMadison.bullets = uwMadison.bullets.filter((bullet) => !/^Coursework:/i.test(bullet.trim()));
-    const programming = next.skills.find((item) => item.id === "skill-stack");
-    if (programming) programming.title = "Programming";
-    delete (next.profile as ResumeData["profile"] & { summary?: string }).summary;
-  }
-  if (savedVersion < 11) {
-    next.profile.email = "tommyjiangch@gmail.com";
-  }
-  if (savedVersion < 12) {
-    next.profile.location = "Los Angeles, CA";
-  }
-  if (next.profile.updated === "Dec 2025") next.profile.updated = "Aug 2026";
-  return next;
+  if ((saved.contentVersion ?? 1) < resumeContentVersion) return cloneInitial();
+  return saved.resume;
 }
 
 export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "letter" }: { initialTemplate?: Template; initialPageSize?: PageSize }) {
