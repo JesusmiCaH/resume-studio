@@ -1,37 +1,5 @@
 @import "tailwindcss";
 
-@font-face {
-  font-family: "Latin Modern Roman";
-  src: url("/fonts/lmroman10-regular.otf") format("opentype");
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Latin Modern Roman";
-  src: url("/fonts/lmroman10-bold.otf") format("opentype");
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Latin Modern Roman";
-  src: url("/fonts/lmroman10-italic.otf") format("opentype");
-  font-style: italic;
-  font-weight: 400;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Latin Modern Roman";
-  src: url("/fonts/lmroman10-bolditalic.otf") format("opentype");
-  font-style: italic;
-  font-weight: 700;
-  font-display: swap;
-}
-
 :root {
   --ink: #17201c;
   --muted: #69716c;
@@ -119,10 +87,10 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .swatch-modern { background: linear-gradient(#18221c 0 11px, #e7ff53 11px 13px, #fffef9 13px); }
 .swatch-compact { background: linear-gradient(90deg, #e7eadf 0 8px, transparent 8px), repeating-linear-gradient(#fffef9 0 6px,#cfd4cf 6px 7px); }
 .paper-stage { display: flex; justify-content: center; align-items: flex-start; overflow: auto; padding: 0 20px 55px; }
-.resume-paper { --preview-scale: .9; width: 8.5in; height: 11in; flex: 0 0 auto; overflow: hidden; background: var(--paper); padding: .48in .58in .52in; box-shadow: 0 22px 60px rgba(38,48,40,.16); transform: scale(var(--preview-scale)); transform-origin: top center; margin-bottom: calc((var(--preview-scale) - 1) * 11in); color: #18201c; position: relative; transition: transform .18s ease, width .18s ease; font-family: "Latin Modern Roman", "Times New Roman", Times, serif; font-synthesis: none; }
+.resume-paper { --preview-scale: .9; width: 8.5in; height: 11in; flex: 0 0 auto; overflow: hidden; background: var(--paper); padding: .48in .58in .52in; box-shadow: 0 22px 60px rgba(38,48,40,.16); transform: scale(var(--preview-scale)); transform-origin: top center; margin-bottom: calc((var(--preview-scale) - 1) * 11in); color: #18201c; position: relative; transition: transform .18s ease, width .18s ease; }
 .resume-paper.page-a4 { width: 210mm; height: 297mm; margin-bottom: calc((var(--preview-scale) - 1) * 297mm); }
 .resume-header { text-align: center; border-bottom: 1.25px solid #17201c; padding-bottom: 9pt; margin-bottom: 9pt; }
-.resume-header h2 { margin: 0; font: 700 22pt/1.05 "Latin Modern Roman", "Times New Roman", Times, serif; letter-spacing: -.02em; }
+.resume-header h2 { margin: 0; font: 600 22pt/1.05 Georgia, serif; letter-spacing: -.02em; }
 .resume-headline { font-size: 9pt; line-height: 1.3; margin: 4pt 0 6pt; color: #4f5752; }
 .resume-contact { display: grid; justify-items: center; gap: 3px; font-size: 7.5pt; line-height: 1.35; margin: 0; color: #505853; }
 .contact-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; column-gap: 13px; row-gap: 3px; }
@@ -131,12 +99,12 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .resume-contact a { color: inherit; text-decoration: none; border: 0; }
 .resume-contact a:hover { color: #314900; text-decoration: underline; text-underline-offset: 2px; }
 .resume-section { margin-top: 5pt; break-inside: avoid; }
-.resume-section h3 { margin: 0 0 3pt; font: 700 8.5pt/1.05 "Latin Modern Roman", "Times New Roman", Times, serif; text-transform: uppercase; letter-spacing: .1em; color: #46534b; }
+.resume-section h3 { margin: 0 0 3pt; font: 700 8.5pt/1.05 Arial, Helvetica, sans-serif; text-transform: uppercase; letter-spacing: .1em; color: #46534b; }
 .resume-entry { margin: 0 0 4pt; break-inside: avoid; }
-.entry-heading { display: flex; justify-content: space-between; gap: 18px; font: 9.5pt/1.12 "Latin Modern Roman", "Times New Roman", Times, serif; }
+.entry-heading { display: flex; justify-content: space-between; gap: 18px; font: 9.5pt/1.12 Georgia, serif; }
 .entry-heading strong { font-weight: 700; }
-.entry-heading span { white-space: nowrap; font: italic 8pt/1.15 "Latin Modern Roman", "Times New Roman", Times, serif; color: #737b76; }
-.entry-subheading { display: flex; justify-content: space-between; gap: 18px; margin-top: 0; font: 8.5pt/1.18 "Latin Modern Roman", "Times New Roman", Times, serif; color: #4f5752; }
+.entry-heading span { white-space: nowrap; font: italic 8pt/1.15 Georgia, serif; color: #737b76; }
+.entry-subheading { display: flex; justify-content: space-between; gap: 18px; margin-top: 0; font: 8.5pt/1.18 Georgia, serif; color: #4f5752; }
 .entry-subheading span { white-space: nowrap; }
 .resume-entry ul { margin: 1.5pt 0 0; padding-left: 14pt; list-style: disc outside; }
 .resume-entry li { color: #414944; font-size: 9pt; line-height: 1.23; margin-bottom: .8pt; padding-left: 1px; }
@@ -146,7 +114,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .skill-entry { display: grid; grid-template-columns: 1.25in 1fr; margin-bottom: 3pt; }
 .skill-entry .entry-heading { display: block; }
 .skill-entry .entry-subheading { display: block; }
-.resume-updated { position: absolute; right: .58in; bottom: .30in; margin: 0; color: #989e9a; font: italic 7pt/1.1 "Latin Modern Roman", "Times New Roman", Times, serif; letter-spacing: .01em; }
+.resume-updated { position: absolute; right: .58in; bottom: .30in; margin: 0; color: #989e9a; font: italic 7pt/1.1 Georgia, serif; letter-spacing: .01em; }
 .print-hint { text-align: center; color: #747d76; font-size: 10px; margin: -28px 0 0; }
 
 /* Scholar keeps a restrained academic hierarchy with a fine section rule. */
@@ -162,7 +130,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .theme-modern .contact-item svg { color: var(--accent); }
 .theme-modern .resume-contact a:hover { color: var(--accent); }
 .theme-modern .resume-section h3 { color: #4d5b00; border-left: 5px solid var(--accent); padding-left: 6px; margin-bottom: 5.5pt; font-size: 10pt; letter-spacing: .08em; }
-.theme-modern .entry-heading strong { font-family: "Latin Modern Roman", "Times New Roman", Times, serif; }
+.theme-modern .entry-heading strong { font-family: Arial, Helvetica, sans-serif; }
 .theme-modern .resume-section { margin-top: 6.5pt; }
 .theme-modern .resume-entry { margin-bottom: 4.5pt; }
 .theme-modern .resume-entry li { line-height: 1.27; }
