@@ -1,37 +1,5 @@
 @import "tailwindcss";
 
-@font-face {
-  font-family: "LMRoman10";
-  src: url("/fonts/lmroman10-regular.otf") format("opentype");
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "LMRoman10";
-  src: url("/fonts/lmroman10-bold.otf") format("opentype");
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "LMRoman10";
-  src: url("/fonts/lmroman10-italic.otf") format("opentype");
-  font-style: italic;
-  font-weight: 400;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "LMRoman10";
-  src: url("/fonts/lmroman10-bolditalic.otf") format("opentype");
-  font-style: italic;
-  font-weight: 700;
-  font-display: swap;
-}
-
 :root {
   --ink: #17201c;
   --muted: #69716c;
@@ -119,7 +87,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .swatch-modern { background: linear-gradient(#18221c 0 11px, #e7ff53 11px 13px, #fffef9 13px); }
 .swatch-compact { background: linear-gradient(90deg, #e7eadf 0 8px, transparent 8px), repeating-linear-gradient(#fffef9 0 6px,#cfd4cf 6px 7px); }
 .paper-stage { display: flex; justify-content: center; align-items: flex-start; overflow: auto; padding: 0 20px 55px; }
-.resume-paper { --preview-scale: .9; width: 8.5in; height: 11in; flex: 0 0 auto; overflow: hidden; background: var(--paper); padding: .48in .58in .52in; box-shadow: 0 22px 60px rgba(38,48,40,.16); transform: scale(var(--preview-scale)); transform-origin: top center; margin-bottom: calc((var(--preview-scale) - 1) * 11in); color: #18201c; position: relative; transition: transform .18s ease, width .18s ease; font-family: "LMRoman10", "Times New Roman", Times, serif; font-synthesis: none; }
+.resume-paper { --preview-scale: .9; width: 8.5in; height: 11in; flex: 0 0 auto; overflow: hidden; background: var(--paper); padding: .48in .58in .52in; box-shadow: 0 22px 60px rgba(38,48,40,.16); transform: scale(var(--preview-scale)); transform-origin: top center; margin-bottom: calc((var(--preview-scale) - 1) * 11in); color: #18201c; position: relative; transition: transform .18s ease, width .18s ease; }
 .resume-paper.page-a4 { width: 210mm; height: 297mm; margin-bottom: calc((var(--preview-scale) - 1) * 297mm); }
 .resume-header { text-align: center; border-bottom: 1.25px solid #17201c; padding-bottom: 9pt; margin-bottom: 9pt; }
 .resume-header h2 { margin: 0; font: 600 22pt/1.05 Georgia, serif; letter-spacing: -.02em; }
