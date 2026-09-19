@@ -42,7 +42,7 @@ test("recognizes imported Tera IDs and preserves removed roles and current draft
   assert.deepEqual(clone(result.experience[1].bullets), clone(initialResume.experience[1].bullets));
   draft.experience = draft.experience.slice(2);
   assert.deepEqual(clone(migrateSavedResume({ resume: draft, contentVersion: 15 })), draft);
-  assert.equal(migrateSavedResume({ resume: draft, contentVersion: 16 }), draft);
+  assert.equal(migrateSavedResume({ resume: draft, contentVersion: 17 }), draft);
 });
 
 test("Tera copy contains only the attributed public numeric target", () => {
@@ -53,4 +53,17 @@ test("Tera copy contains only the attributed public numeric target", () => {
   assert.doesNotMatch(text, /RMSE|endpoint error|\d+%|versus/);
   assert.equal(roles[0].date, "Feb 2026 — Sep 2026");
   assert.equal(roles[1].date, "Aug 2025 — Feb 2026");
+});
+
+
+test("restores the approved reconstruction methods in v16 drafts without replacing other edits", () => {
+  const draft = clone(initialResume);
+  draft.experience[0].bullets[0] = "Custom data pipeline description";
+  draft.experience[0].bullets[3] = "Implemented and evaluated 3D reconstruction pipelines from video, assessing geometric accuracy and visual consistency.";
+  draft.experience[0].date = "Custom date";
+  const expected = clone(draft);
+  expected.experience[0].bullets[3] = "Implemented and benchmarked 3D reconstruction pipelines spanning classical SfM, feed-forward 3D models, and Gaussian Splatting.";
+  assert.deepEqual(clone(migrateSavedResume({ resume: draft, contentVersion: 16 })), expected);
+  draft.experience[0].bullets[3] = "Custom reconstruction description";
+  assert.deepEqual(clone(migrateSavedResume({ resume: draft, contentVersion: 16 })), draft);
 });

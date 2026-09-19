@@ -106,7 +106,7 @@ const translations = {
 };
 
 const tabs: SectionKey[] = ["profile", "education", "experience", "projects", "publications", "skills"];
-const resumeContentVersion = 16;
+const resumeContentVersion = 17;
 
 const jhuExperience: ResumeItem = {
   id: "exp-jhu",
@@ -130,7 +130,7 @@ const teraResearcherExperience: ResumeItem = {
     "Built a geometry-guided data pipeline to prepare training and evaluation samples for learned visual correspondence in camera-based navigation.",
     "Fine-tuned and evaluated learned correspondence models to improve visual localization robustness under real-time operating constraints. System context: camera-based, GPS-denied navigation with a publicly documented camera-input target of 20 FPS.",
     "Built flight-replay diagnostics linking intermediate matching and pose behavior to trajectory-level failures; curated reproducible hard cases to guide the team's targeted fine-tuning.",
-    "Implemented and evaluated 3D reconstruction pipelines from video, assessing geometric accuracy and visual consistency.",
+    "Implemented and benchmarked 3D reconstruction pipelines spanning classical SfM, feed-forward 3D models, and Gaussian Splatting.",
   ],
 };
 
@@ -198,6 +198,18 @@ const makeId = () => typeof crypto !== "undefined" && crypto.randomUUID ? crypto
 function migrateSavedResume(saved: { resume?: ResumeData; contentVersion?: number }) {
   if (!saved.resume) return cloneInitial();
   if ((saved.contentVersion ?? 1) >= resumeContentVersion) return saved.resume;
+  if (saved.contentVersion === 16) {
+    return {
+      ...saved.resume,
+      experience: saved.resume.experience.map((item) => {
+        if (item.id !== teraResearcherExperience.id && item.subtitle.trim().toLowerCase() !== "tera ai") return item;
+        return {
+          ...item,
+          bullets: item.bullets.map((bullet) => bullet === "Implemented and evaluated 3D reconstruction pipelines from video, assessing geometric accuracy and visual consistency." ? teraResearcherExperience.bullets[3] : bullet),
+        };
+      }),
+    };
+  }
   // Replace Tera descriptions without embedding withdrawn text in the client bundle.
   // Keep every other section and the user's role ordering unchanged.
   return {
