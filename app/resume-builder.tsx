@@ -106,7 +106,7 @@ const translations = {
 };
 
 const tabs: SectionKey[] = ["profile", "education", "experience", "projects", "publications", "skills"];
-const resumeContentVersion = 13;
+const resumeContentVersion = 18;
 
 const jhuExperience: ResumeItem = {
   id: "exp-jhu",
@@ -125,12 +125,12 @@ const teraResearcherExperience: ResumeItem = {
   title: "3D Vision Researcher",
   subtitle: "Tera AI",
   location: "Remote",
-  date: "Feb 2026 — Present",
+  date: "Feb 2026 — Sep 2026",
   bullets: [
-    "Built a geometry-guided data pipeline to derive high-confidence geometric pseudo-labels for dense image correspondence from internally collected flight video and prior scene geometry, supporting model fine-tuning and held-out evaluation.",
-    "Evaluated and fine-tuned UFM as an efficient frame-to-frame correspondence frontend, improving robustness for long-horizon visual localization under practical latency constraints.",
-    "Developed a flight-replay diagnostic workflow that connected correspondence behavior to GPS-referenced trajectory error, isolating failures in matching, downstream pose processing, and geographic priors to guide targeted iteration.",
-    "Implemented and benchmarked 3D reconstruction pipelines spanning classical SfM, feed-forward 3D models, and Gaussian Splatting on internal flight video; evaluated Sim(3)-aligned point clouds by point-to-mesh distance and novel-view quality by held-out photometric error.",
+    "Built a geometry-guided data pipeline to prepare training and evaluation samples for learned visual correspondence in camera-based navigation.",
+    "Fine-tuned and evaluated learned correspondence models to improve visual localization robustness under real-time operating constraints. System context: camera-based, GPS-denied navigation with a publicly documented camera-input target of 20 FPS.",
+    "Built flight-replay diagnostics linking intermediate matching and pose behavior to trajectory-level failures; curated reproducible hard cases to guide the team's targeted fine-tuning.",
+    "Implemented and benchmarked video-based 3D reconstruction pipelines spanning classical SfM, feed-forward 3D models, and Gaussian Splatting, assessing geometric accuracy and visual consistency.",
   ],
 };
 
@@ -141,7 +141,7 @@ const teraInternExperience: ResumeItem = {
   location: "Remote",
   date: "Aug 2025 — Feb 2026",
   bullets: [
-    "Prototyped windowed deployment of STream3R for long-horizon flight video; identified memory growth and clip-level latency as blockers for real-time, edge-constrained localization, motivating an online correspondence-based frontend.",
+    "Evaluated learning-based 3D perception approaches for long video sequences, studying memory and latency trade-offs for real-time visual localization.",
   ],
 };
 
@@ -197,8 +197,33 @@ const makeId = () => typeof crypto !== "undefined" && crypto.randomUUID ? crypto
 
 function migrateSavedResume(saved: { resume?: ResumeData; contentVersion?: number }) {
   if (!saved.resume) return cloneInitial();
-  if ((saved.contentVersion ?? 1) < resumeContentVersion) return cloneInitial();
-  return saved.resume;
+  if ((saved.contentVersion ?? 1) >= resumeContentVersion) return saved.resume;
+  if (saved.contentVersion === 16 || saved.contentVersion === 17) {
+    return {
+      ...saved.resume,
+      experience: saved.resume.experience.map((item) => {
+        if (item.id !== teraResearcherExperience.id && item.subtitle.trim().toLowerCase() !== "tera ai") return item;
+        return {
+          ...item,
+          bullets: item.bullets.map((bullet) => (bullet === "Implemented and evaluated 3D reconstruction pipelines from video, assessing geometric accuracy and visual consistency." || bullet === "Implemented and benchmarked 3D reconstruction pipelines spanning classical SfM, feed-forward 3D models, and Gaussian Splatting.") ? teraResearcherExperience.bullets[3] : bullet),
+        };
+      }),
+    };
+  }
+  // Replace Tera descriptions without embedding withdrawn text in the client bundle.
+  // Keep every other section and the user's role ordering unchanged.
+  return {
+    ...saved.resume,
+    experience: saved.resume.experience.map((item) => {
+      const isIntern = item.id === teraInternExperience.id;
+      const isResearcher = item.id === teraResearcherExperience.id;
+      if (!isIntern && !isResearcher && item.subtitle.trim().toLowerCase() !== "tera ai") return item;
+      const replacement = isIntern || (!isResearcher && /part[\s-]*time/i.test(item.title))
+        ? teraInternExperience
+        : teraResearcherExperience;
+      return { ...item, date: replacement.date, bullets: [...replacement.bullets] };
+    }),
+  };
 }
 
 export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "letter" }: { initialTemplate?: Template; initialPageSize?: PageSize }) {
@@ -294,7 +319,7 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
       try {
         const parsed = JSON.parse(String(reader.result));
         if (!parsed.profile || !parsed.education || !parsed.experience) throw new Error("Invalid resume");
-        setResume(parsed);
+        setResume(migrateSavedResume({ resume: parsed }));
         setStatus("imported");
       } catch {
         setStatus("importError");
@@ -485,6 +510,10 @@ function ResumeSection({ title, children }: { title: string; children: ReactNode
   return <section className="resume-section"><h3>{title}</h3>{children}</section>;
 }
 
+function PublicFrameRate({ text }: { text: string }) {
+  return <>{text.split(/(20 FPS)/g).map((part, index) => index % 2 === 1 ? <strong key={index}>{part}</strong> : part)}</>;
+}
+
 function ExperienceList({ items }: { items: ResumeItem[] }) {
   const groups = items.reduce<Array<{ organization: string; location: string; roles: ResumeItem[] }>>((result, item) => {
     const previous = result.at(-1);
@@ -502,7 +531,7 @@ function ExperienceList({ items }: { items: ResumeItem[] }) {
       return <div className="resume-entry" key={onlyRole.id}>
         <div className="entry-heading"><strong>{group.organization}</strong>{onlyRole.date && <span>{onlyRole.date}</span>}</div>
         <div className="entry-subheading"><em>{onlyRole.title}</em>{group.location && <span>{group.location}</span>}</div>
-        {onlyRole.bullets.filter(Boolean).length > 0 && <ul>{onlyRole.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{bullet}</li>)}</ul>}
+        {onlyRole.bullets.filter(Boolean).length > 0 && <ul>{onlyRole.bullets.filter(Boolean).map((bullet, index) => <li key={index}><PublicFrameRate text={bullet} /></li>)}</ul>}
       </div>;
     }
 
@@ -510,7 +539,7 @@ function ExperienceList({ items }: { items: ResumeItem[] }) {
       <div className="entry-heading"><strong>{group.organization}</strong>{group.location && <span>{group.location}</span>}</div>
       {group.roles.map((role) => <div className="experience-role" key={role.id}>
         <div className="entry-subheading"><em>{role.title}</em>{role.date && <span>{role.date}</span>}</div>
-        {role.bullets.filter(Boolean).length > 0 && <ul>{role.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{bullet}</li>)}</ul>}
+        {role.bullets.filter(Boolean).length > 0 && <ul>{role.bullets.filter(Boolean).map((bullet, index) => <li key={index}><PublicFrameRate text={bullet} /></li>)}</ul>}
       </div>)}
     </div>;
   })}</>;
