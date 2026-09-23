@@ -106,7 +106,7 @@ const translations = {
 };
 
 const tabs: SectionKey[] = ["profile", "education", "experience", "projects", "publications", "skills"];
-const resumeContentVersion = 19;
+const resumeContentVersion = 20;
 
 const jhuExperience: ResumeItem = {
   id: "exp-jhu",
@@ -170,7 +170,7 @@ const initialResume: ResumeData = {
     updated: "Aug 2026",
   },
   education: [
-    { id: "edu-uw", title: "University of Wisconsin–Madison", subtitle: "MS in Electrical and Computer Engineering", location: "Madison, WI", date: "Sep 2024 — Dec 2025", bullets: ["GPA: 3.82/4.0"] },
+    { id: "edu-uw", title: "University of Wisconsin–Madison", subtitle: "MS in Electrical and Computer Engineering", location: "Madison, WI", date: "Sep 2024 — Dec 2025", bullets: ["GPA: 3.66/4.0"] },
     { id: "edu-uom", title: "University of Manchester", subtitle: "MS in Communication and Signal Processing", location: "Manchester, UK", date: "Sep 2022 — Dec 2023", bullets: ["GPA: 83.5/100 · Distinction Honor"] },
     { id: "edu-ccust", title: "Changchun University of Science and Technology", subtitle: "BEng in Optoelectronic Information Science and Engineering", location: "Changchun, China", date: "Sep 2018 — Jun 2022", bullets: ["GPA: 3.86/5.00 · Rank: 10/221"] },
   ],
@@ -197,9 +197,15 @@ const makeId = () => typeof crypto !== "undefined" && crypto.randomUUID ? crypto
 
 function migrateSavedResume(saved: { resume?: ResumeData; contentVersion?: number }) {
   if (!saved.resume) return cloneInitial();
-  const resume = /^(?:https?:\/\/)?(?:www\.)?(?:linkedin\.com\/in\/)?chenghao-jiang\/?$/i.test(saved.resume.profile.linkedin.trim())
+  let resume = /^(?:https?:\/\/)?(?:www\.)?(?:linkedin\.com\/in\/)?chenghao-jiang\/?$/i.test(saved.resume.profile.linkedin.trim())
     ? { ...saved.resume, profile: { ...saved.resume.profile, linkedin: initialResume.profile.linkedin } }
     : saved.resume;
+  const education = resume.education.map((item) => {
+    const isWisconsin = item.id === "edu-uw" || /^University of Wisconsin\s*[-–—]\s*Madison$/i.test(item.title.trim());
+    if (!isWisconsin || !item.bullets.includes("GPA: 3.82/4.0")) return item;
+    return { ...item, bullets: item.bullets.map((bullet) => bullet === "GPA: 3.82/4.0" ? "GPA: 3.66/4.0" : bullet) };
+  });
+  if (education.some((item, index) => item !== resume.education[index])) resume = { ...resume, education };
   if ((saved.contentVersion ?? 1) >= 18) return resume;
   if (saved.contentVersion === 16 || saved.contentVersion === 17) {
     return {
