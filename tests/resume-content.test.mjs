@@ -76,3 +76,25 @@ test("combines the approved methods and evaluation criteria in v17 drafts", () =
   assert.equal(result.experience[0].bullets[3], "Implemented and benchmarked video-based 3D reconstruction pipelines spanning classical SfM, feed-forward 3D models, and Gaussian Splatting, assessing geometric accuracy and visual consistency.");
   assert.deepEqual(clone(result.experience.slice(1)), draft.experience.slice(1));
 });
+
+
+test("repairs the known LinkedIn address in current and old drafts without changing other content", () => {
+  const target = "https://www.linkedin.com/in/chenghao-jiang-93a979228/";
+  assert.equal(initialResume.profile.linkedin, target);
+  for (const version of [undefined, 15, 16, 17, 18, 19]) {
+    for (const address of ["Chenghao-Jiang", "https://linkedin.com/in/Chenghao-Jiang", "https://www.linkedin.com/in/chenghao-jiang/"]) {
+      const draft = clone(initialResume);
+      draft.profile.linkedin = address;
+      const result = clone(migrateSavedResume({ resume: draft, contentVersion: version }));
+      const expected = clone(draft);
+      expected.profile.linkedin = target;
+      assert.deepEqual(result, expected);
+      assert.equal(draft.profile.linkedin, address);
+    }
+  }
+  for (const address of ["", "https://www.linkedin.com/in/another-profile/"]) {
+    const draft = clone(initialResume);
+    draft.profile.linkedin = address;
+    assert.equal(migrateSavedResume({ resume: draft, contentVersion: 18 }), draft);
+  }
+});

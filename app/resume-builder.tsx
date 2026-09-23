@@ -106,7 +106,7 @@ const translations = {
 };
 
 const tabs: SectionKey[] = ["profile", "education", "experience", "projects", "publications", "skills"];
-const resumeContentVersion = 18;
+const resumeContentVersion = 19;
 
 const jhuExperience: ResumeItem = {
   id: "exp-jhu",
@@ -166,7 +166,7 @@ const initialResume: ResumeData = {
     location: "Los Angeles, CA",
     website: "jesusmicah.github.io",
     github: "JesusmiCaH",
-    linkedin: "Chenghao-Jiang",
+    linkedin: "https://www.linkedin.com/in/chenghao-jiang-93a979228/",
     updated: "Aug 2026",
   },
   education: [
@@ -197,11 +197,14 @@ const makeId = () => typeof crypto !== "undefined" && crypto.randomUUID ? crypto
 
 function migrateSavedResume(saved: { resume?: ResumeData; contentVersion?: number }) {
   if (!saved.resume) return cloneInitial();
-  if ((saved.contentVersion ?? 1) >= resumeContentVersion) return saved.resume;
+  const resume = /^(?:https?:\/\/)?(?:www\.)?(?:linkedin\.com\/in\/)?chenghao-jiang\/?$/i.test(saved.resume.profile.linkedin.trim())
+    ? { ...saved.resume, profile: { ...saved.resume.profile, linkedin: initialResume.profile.linkedin } }
+    : saved.resume;
+  if ((saved.contentVersion ?? 1) >= 18) return resume;
   if (saved.contentVersion === 16 || saved.contentVersion === 17) {
     return {
-      ...saved.resume,
-      experience: saved.resume.experience.map((item) => {
+      ...resume,
+      experience: resume.experience.map((item) => {
         if (item.id !== teraResearcherExperience.id && item.subtitle.trim().toLowerCase() !== "tera ai") return item;
         return {
           ...item,
@@ -213,8 +216,8 @@ function migrateSavedResume(saved: { resume?: ResumeData; contentVersion?: numbe
   // Replace Tera descriptions without embedding withdrawn text in the client bundle.
   // Keep every other section and the user's role ordering unchanged.
   return {
-    ...saved.resume,
-    experience: saved.resume.experience.map((item) => {
+    ...resume,
+    experience: resume.experience.map((item) => {
       const isIntern = item.id === teraInternExperience.id;
       const isResearcher = item.id === teraResearcherExperience.id;
       if (!isIntern && !isResearcher && item.subtitle.trim().toLowerCase() !== "tera ai") return item;
@@ -469,7 +472,7 @@ function ResumePaper({ resume, template, pageSize, zoom, onOverflowChange }: { r
           {p.location && <ContactItem icon={FaLocationDot}>{p.location}</ContactItem>}
           {p.email && <ContactItem icon={FaRegEnvelope} href={`mailto:${p.email.trim()}`}>{p.email}</ContactItem>}
           {p.phone && <ContactItem icon={FaPhone} href={`tel:${p.phone.replace(/[^+\d]/g, "")}`}>{p.phone}</ContactItem>}
-          {p.linkedin && <ContactItem icon={FaLinkedin} href={toProfileUrl(p.linkedin, "linkedin.com/in")}>{p.linkedin}</ContactItem>}
+          {p.linkedin && <ContactItem icon={FaLinkedin} href={toProfileUrl(p.linkedin, "linkedin.com/in")}>{/^https?:\/\//i.test(p.linkedin) ? "LinkedIn" : p.linkedin}</ContactItem>}
           {p.github && <ContactItem icon={FaGithub} href={toProfileUrl(p.github, "github.com")}>{p.github}</ContactItem>}
           {p.website && <ContactItem icon={FaLink} href={toExternalUrl(p.website)}>{p.website}</ContactItem>}
         </div>
