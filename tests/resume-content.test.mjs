@@ -76,3 +76,51 @@ test("combines the approved methods and evaluation criteria in v17 drafts", () =
   assert.equal(result.experience[0].bullets[3], "Implemented and benchmarked video-based 3D reconstruction pipelines spanning classical SfM, feed-forward 3D models, and Gaussian Splatting, assessing geometric accuracy and visual consistency.");
   assert.deepEqual(clone(result.experience.slice(1)), draft.experience.slice(1));
 });
+
+
+test("repairs the known LinkedIn address in current and old drafts without changing other content", () => {
+  const target = "https://www.linkedin.com/in/chenghao-jiang-93a979228/";
+  assert.equal(initialResume.profile.linkedin, target);
+  for (const version of [undefined, 15, 16, 17, 18, 19]) {
+    for (const address of ["Chenghao-Jiang", "https://linkedin.com/in/Chenghao-Jiang", "https://www.linkedin.com/in/chenghao-jiang/"]) {
+      const draft = clone(initialResume);
+      draft.profile.linkedin = address;
+      const result = clone(migrateSavedResume({ resume: draft, contentVersion: version }));
+      const expected = clone(draft);
+      expected.profile.linkedin = target;
+      assert.deepEqual(result, expected);
+      assert.equal(draft.profile.linkedin, address);
+    }
+  }
+  for (const address of ["", "https://www.linkedin.com/in/another-profile/"]) {
+    const draft = clone(initialResume);
+    draft.profile.linkedin = address;
+    assert.equal(migrateSavedResume({ resume: draft, contentVersion: 18 }), draft);
+  }
+});
+
+
+test("corrects only the Wisconsin GPA while preserving local edits and other schools", () => {
+  assert.equal(initialResume.education[0].bullets[0], "GPA: 3.66/4.0");
+  for (const version of [undefined, 15, 16, 17, 18, 19, 20]) {
+    const draft = clone(initialResume);
+    draft.education[0].bullets = ["GPA: 3.82/4.0", "Custom coursework"];
+    draft.education[1].bullets = ["GPA: 3.82/4.0"];
+    const expected = clone(draft);
+    expected.education[0].bullets[0] = "GPA: 3.66/4.0";
+    assert.deepEqual(clone(migrateSavedResume({ resume: draft, contentVersion: version })), expected);
+    assert.equal(draft.education[0].bullets[0], "GPA: 3.82/4.0");
+  }
+  for (const title of ["University of Wisconsin–Madison", "University of Wisconsin-Madison"]) {
+    const draft = clone(initialResume);
+    draft.education[0].id = "imported-school";
+    draft.education[0].title = title;
+    draft.education[0].bullets = ["GPA: 3.82/4.0"];
+    assert.equal(migrateSavedResume({ resume: draft, contentVersion: 19 }).education[0].bullets[0], "GPA: 3.66/4.0");
+  }
+  const edited = clone(initialResume);
+  edited.education[0].bullets = ["GPA: 3.66/4.0", "Custom coursework"];
+  assert.equal(migrateSavedResume({ resume: edited, contentVersion: 19 }), edited);
+  edited.education.shift();
+  assert.equal(migrateSavedResume({ resume: edited, contentVersion: 19 }), edited);
+});

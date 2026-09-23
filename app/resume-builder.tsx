@@ -106,7 +106,7 @@ const translations = {
 };
 
 const tabs: SectionKey[] = ["profile", "education", "experience", "projects", "publications", "skills"];
-const resumeContentVersion = 18;
+const resumeContentVersion = 20;
 
 const jhuExperience: ResumeItem = {
   id: "exp-jhu",
@@ -166,11 +166,11 @@ const initialResume: ResumeData = {
     location: "Los Angeles, CA",
     website: "jesusmicah.github.io",
     github: "JesusmiCaH",
-    linkedin: "Chenghao-Jiang",
+    linkedin: "https://www.linkedin.com/in/chenghao-jiang-93a979228/",
     updated: "Aug 2026",
   },
   education: [
-    { id: "edu-uw", title: "University of Wisconsin–Madison", subtitle: "MS in Electrical and Computer Engineering", location: "Madison, WI", date: "Sep 2024 — Dec 2025", bullets: ["GPA: 3.82/4.0"] },
+    { id: "edu-uw", title: "University of Wisconsin–Madison", subtitle: "MS in Electrical and Computer Engineering", location: "Madison, WI", date: "Sep 2024 — Dec 2025", bullets: ["GPA: 3.66/4.0"] },
     { id: "edu-uom", title: "University of Manchester", subtitle: "MS in Communication and Signal Processing", location: "Manchester, UK", date: "Sep 2022 — Dec 2023", bullets: ["GPA: 83.5/100 · Distinction Honor"] },
     { id: "edu-ccust", title: "Changchun University of Science and Technology", subtitle: "BEng in Optoelectronic Information Science and Engineering", location: "Changchun, China", date: "Sep 2018 — Jun 2022", bullets: ["GPA: 3.86/5.00 · Rank: 10/221"] },
   ],
@@ -197,11 +197,20 @@ const makeId = () => typeof crypto !== "undefined" && crypto.randomUUID ? crypto
 
 function migrateSavedResume(saved: { resume?: ResumeData; contentVersion?: number }) {
   if (!saved.resume) return cloneInitial();
-  if ((saved.contentVersion ?? 1) >= resumeContentVersion) return saved.resume;
+  let resume = /^(?:https?:\/\/)?(?:www\.)?(?:linkedin\.com\/in\/)?chenghao-jiang\/?$/i.test(saved.resume.profile.linkedin.trim())
+    ? { ...saved.resume, profile: { ...saved.resume.profile, linkedin: initialResume.profile.linkedin } }
+    : saved.resume;
+  const education = resume.education.map((item) => {
+    const isWisconsin = item.id === "edu-uw" || /^University of Wisconsin\s*[-–—]\s*Madison$/i.test(item.title.trim());
+    if (!isWisconsin || !item.bullets.includes("GPA: 3.82/4.0")) return item;
+    return { ...item, bullets: item.bullets.map((bullet) => bullet === "GPA: 3.82/4.0" ? "GPA: 3.66/4.0" : bullet) };
+  });
+  if (education.some((item, index) => item !== resume.education[index])) resume = { ...resume, education };
+  if ((saved.contentVersion ?? 1) >= 18) return resume;
   if (saved.contentVersion === 16 || saved.contentVersion === 17) {
     return {
-      ...saved.resume,
-      experience: saved.resume.experience.map((item) => {
+      ...resume,
+      experience: resume.experience.map((item) => {
         if (item.id !== teraResearcherExperience.id && item.subtitle.trim().toLowerCase() !== "tera ai") return item;
         return {
           ...item,
@@ -213,8 +222,8 @@ function migrateSavedResume(saved: { resume?: ResumeData; contentVersion?: numbe
   // Replace Tera descriptions without embedding withdrawn text in the client bundle.
   // Keep every other section and the user's role ordering unchanged.
   return {
-    ...saved.resume,
-    experience: saved.resume.experience.map((item) => {
+    ...resume,
+    experience: resume.experience.map((item) => {
       const isIntern = item.id === teraInternExperience.id;
       const isResearcher = item.id === teraResearcherExperience.id;
       if (!isIntern && !isResearcher && item.subtitle.trim().toLowerCase() !== "tera ai") return item;
@@ -469,7 +478,7 @@ function ResumePaper({ resume, template, pageSize, zoom, onOverflowChange }: { r
           {p.location && <ContactItem icon={FaLocationDot}>{p.location}</ContactItem>}
           {p.email && <ContactItem icon={FaRegEnvelope} href={`mailto:${p.email.trim()}`}>{p.email}</ContactItem>}
           {p.phone && <ContactItem icon={FaPhone} href={`tel:${p.phone.replace(/[^+\d]/g, "")}`}>{p.phone}</ContactItem>}
-          {p.linkedin && <ContactItem icon={FaLinkedin} href={toProfileUrl(p.linkedin, "linkedin.com/in")}>{p.linkedin}</ContactItem>}
+          {p.linkedin && <ContactItem icon={FaLinkedin} href={toProfileUrl(p.linkedin, "linkedin.com/in")}>{/^https?:\/\//i.test(p.linkedin) ? "LinkedIn" : p.linkedin}</ContactItem>}
           {p.github && <ContactItem icon={FaGithub} href={toProfileUrl(p.github, "github.com")}>{p.github}</ContactItem>}
           {p.website && <ContactItem icon={FaLink} href={toExternalUrl(p.website)}>{p.website}</ContactItem>}
         </div>
