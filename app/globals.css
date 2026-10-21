@@ -50,6 +50,17 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .form-stack input, .form-stack textarea { width: 100%; min-width: 0; border: 1px solid #cfd5cf; border-radius: 8px; background: white; padding: 11px 12px; outline: 0; resize: vertical; font-size: 12px; line-height: 1.45; }
 .form-stack input:focus, .form-stack textarea:focus { border-color: #7d8829; box-shadow: 0 0 0 3px rgba(212,237,64,.18); }
 .field-wide { grid-column: 1 / -1; }
+.formatted-field { display: grid; gap: 7px; min-width: 0; }
+.formatted-field-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.formatted-field-heading label { font-size: 11px; font-weight: 700; color: #414a44; }
+.format-actions { display: flex; flex: 0 0 auto; gap: 4px; }
+.format-actions button { border: 1px solid #d7ddd3; border-radius: 5px; padding: 4px 7px; background: #f3f5ef; font-size: 10px; cursor: pointer; }
+.format-actions button:hover { background: #e7ff53; }
+.format-actions button:disabled { opacity: .5; cursor: default; }
+.format-hint { font-size: 10px; line-height: 1.4; color: #69716c; }
+.link-editor { display: grid; gap: 7px; padding: 12px; border: 1px solid #cbd4b5; border-radius: 8px; background: #f7faef; }
+.link-editor-actions { display: flex; gap: 8px; }
+.format-error { margin: 0; font-size: 11px; color: #9b3a37; }
 .items-editor { display: grid; gap: 16px; }
 .item-card { border: 1px solid #d8ddd8; border-radius: 12px; padding: 14px; background: white; box-shadow: 0 4px 16px rgba(35,44,38,.025); }
 .item-card-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 13px; }
@@ -109,8 +120,13 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .resume-entry ul { margin: 1.5pt 0 0; padding-left: 14pt; list-style: disc outside; }
 .resume-entry li { color: #414944; font-size: 9pt; line-height: 1.23; margin-bottom: .8pt; padding-left: 1px; }
 .resume-entry li::marker { color: #17201c; font-size: .9em; }
+.resume-entry .result-metric { font-weight: 700; }
+.resume-paper a.inline-link { color: inherit; text-decoration: underline; text-decoration-thickness: .5pt; text-underline-offset: 1.5pt; overflow-wrap: anywhere; }
+.resume-paper a.inline-link:hover { color: #586900; }
+.resume-paper strong { font-weight: 700; }
 .experience-role + .experience-role { margin-top: 2pt; }
 .publication-entry .entry-subheading { display: block; }
+.publication-status { margin-top: 1pt; color: #69716c; font: italic 8pt/1.15 Georgia, serif; }
 .skill-entry { display: grid; grid-template-columns: 1.25in 1fr; margin-bottom: 3pt; }
 .skill-entry .entry-heading { display: block; }
 .skill-entry .entry-subheading { display: block; }
