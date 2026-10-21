@@ -3,6 +3,8 @@
 import { ChangeEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { FaGithub, FaLink, FaLinkedin, FaLocationDot, FaPhone, FaRegEnvelope } from "react-icons/fa6";
 import type { IconType } from "react-icons";
+import { InlineText } from "./inline-format";
+import { FormattedField } from "./formatted-field";
 
 type Template = "Scholar" | "Modern" | "Compact";
 type PageSize = "letter" | "a4";
@@ -15,6 +17,7 @@ type ResumeItem = {
   title: string;
   subtitle: string;
   location: string;
+  status?: string;
   date: string;
   bullets: string[];
 };
@@ -63,7 +66,7 @@ const translations = {
     templateDescriptions: { Scholar: "Academic classic", Modern: "Modern research", Compact: "Compact one-page" },
     printHint: "Choose “Save as PDF” in the system print dialog. Your template and paper settings will be preserved.",
     profileFields: { name: "Name", headline: "Research focus / professional title", email: "Email", phone: "Phone", location: "Location", website: "Personal website", github: "GitHub", linkedin: "LinkedIn", updated: "Updated" },
-    itemFields: { title: "Title", publicationTitle: "Publication title", category: "Category", organization: "Organization / subtitle", authors: "Authors", skillList: "Skills (separate with ·)", location: "Location / status", date: "Date / venue", bullets: "Highlights (one per line)" },
+    itemFields: { title: "Title", publicationTitle: "Publication title", category: "Category", organization: "Organization / subtitle", authors: "Authors", skillList: "Skills (separate with ·)", location: "Location", status: "Publication status (optional)", date: "Date / venue", bullets: "Highlights (one per line)" },
     newItem: { education: "New institution", experience: "New role", projects: "New project", publications: "New publication", skills: "New skill group" },
     moveUp: "Move up",
     moveDown: "Move down",
@@ -95,7 +98,7 @@ const translations = {
     templateDescriptions: { Scholar: "学术经典", Modern: "现代研究", Compact: "紧凑单页" },
     printHint: "点击“导出 PDF”后，在系统窗口中选择“存储为 PDF”。模板与纸张设置会保留。",
     profileFields: { name: "姓名", headline: "研究方向 / 职业标题", email: "邮箱", phone: "电话", location: "所在地", website: "个人主页", github: "GitHub", linkedin: "LinkedIn", updated: "更新日期" },
-    itemFields: { title: "标题", publicationTitle: "论文标题", category: "类别", organization: "机构 / 副标题", authors: "作者", skillList: "技能（使用 · 分隔）", location: "地点 / 状态", date: "日期 / 会议信息", bullets: "要点（每行一条）" },
+    itemFields: { title: "标题", publicationTitle: "论文标题", category: "类别", organization: "机构 / 副标题", authors: "作者", skillList: "技能（使用 · 分隔）", location: "地点", status: "发表状态（可选）", date: "日期 / 会议信息", bullets: "要点（每行一条）" },
     newItem: { education: "新学校", experience: "新职位", projects: "新项目", publications: "新论文", skills: "新技能类别" },
     moveUp: "上移",
     moveDown: "下移",
@@ -106,7 +109,8 @@ const translations = {
 };
 
 const tabs: SectionKey[] = ["profile", "education", "experience", "projects", "publications", "skills"];
-const resumeContentVersion = 20;
+const resumeContentVersion = 21;
+const resumeBackupSchemaVersion = 1;
 
 const jhuExperience: ResumeItem = {
   id: "exp-jhu",
@@ -184,7 +188,7 @@ const initialResume: ResumeData = {
     { id: "project-sharp", title: "Privacy-Aware Sensor Data for Cooperative Perception", subtitle: "Supervised by Prof. Akarsh Prabhakara", location: "Madison, WI", date: "Jun 2025 — Jul 2025", bullets: ["Explored cooperative SLAM under privacy constraints using SHARP, transmitting pointmap-based novel-view renderings instead of raw images.", "Evaluated VGGT on the OPV2V dataset across ego-only, SHARP-generated, and raw multi-agent inputs.", "Extended the CARLA simulation in OPV2V with depth sensing for point-cloud rescaling and downstream 3D recovery."] },
   ],
   publications: [
-    { id: "pub-hotmobile", title: "Privacy-Aware Sharing of Raw Spatial Sensor Data for Cooperative Perception", subtitle: "Bangya Liu, Chenghao Jiang, Chengpo Yan, Suman Banerjee, Akarsh Prabhakara", location: "Under review", date: "HotMobile 2026", bullets: [] },
+    { id: "pub-hotmobile", title: "Privacy-Aware Sharing of Raw Spatial Sensor Data for Cooperative Perception", subtitle: "Bangya Liu, Chenghao Jiang, Chengpo Yan, Suman Banerjee, Akarsh Prabhakara", location: "", status: "Under review", date: "HotMobile 2026", bullets: [] },
   ],
   skills: [
     { id: "skill-stack", title: "Programming", subtitle: "Python · CUDA · PyTorch · LaTeX", location: "", date: "", bullets: [] },
@@ -196,6 +200,25 @@ const cloneInitial = () => JSON.parse(JSON.stringify(initialResume)) as ResumeDa
 const makeId = () => typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
 
 function migrateSavedResume(saved: { resume?: ResumeData; contentVersion?: number }) {
+  if (!saved.resume) return cloneInitial();
+  // Content corrections apply once to historical local drafts, never to a new backup.
+  const resume = (saved.contentVersion ?? 1) >= resumeContentVersion
+    ? saved.resume
+    : migrateLegacyResumeContent(saved);
+  return migratePublicationFields(resume);
+}
+
+function migratePublicationFields(resume: ResumeData): ResumeData {
+  const publications = resume.publications.map((item) => {
+    if (item.status !== undefined) return item;
+    // Only known legacy statuses are migrated; a geographic location stays hidden.
+    const status = /^(under review|submitted|accepted|published|in press|preprint)$/i.test(item.location.trim()) ? item.location : "";
+    return { ...item, status };
+  });
+  return publications.some((item, index) => item !== resume.publications[index]) ? { ...resume, publications } : resume;
+}
+
+function migrateLegacyResumeContent(saved: { resume?: ResumeData; contentVersion?: number }) {
   if (!saved.resume) return cloneInitial();
   let resume = /^(?:https?:\/\/)?(?:www\.)?(?:linkedin\.com\/in\/)?chenghao-jiang\/?$/i.test(saved.resume.profile.linkedin.trim())
     ? { ...saved.resume, profile: { ...saved.resume.profile, linkedin: initialResume.profile.linkedin } }
@@ -235,6 +258,48 @@ function migrateSavedResume(saved: { resume?: ResumeData; contentVersion?: numbe
   };
 }
 
+function serializeResume(resume: ResumeData) {
+  return JSON.stringify({ schemaVersion: resumeBackupSchemaVersion, contentVersion: resumeContentVersion, resume }, null, 2);
+}
+
+function readResumeData(value: unknown): ResumeData {
+  const isObject = (candidate: unknown): candidate is Record<string, unknown> => !!candidate && typeof candidate === "object" && !Array.isArray(candidate);
+  if (!isObject(value) || !isObject(value.profile) || typeof value.profile.name !== "string") throw new Error("Invalid resume");
+  const profile = { ...value.profile };
+  for (const key of Object.keys(initialResume.profile)) {
+    if (profile[key] === undefined) profile[key] = "";
+    if (typeof profile[key] !== "string") throw new Error("Invalid profile field");
+  }
+  const result: Record<string, unknown> = { ...value, profile };
+  for (const section of tabs.filter((key) => key !== "profile")) {
+    const entries = value[section] ?? (section === "education" || section === "experience" ? null : []);
+    if (!Array.isArray(entries)) throw new Error("Invalid resume section");
+    result[section] = entries.map((entry: unknown) => {
+      if (!isObject(entry) || typeof entry.id !== "string" || typeof entry.title !== "string") throw new Error("Invalid resume item");
+      const item = { ...entry };
+      for (const field of ["subtitle", "location", "date"]) {
+        if (item[field] === undefined) item[field] = "";
+        if (typeof item[field] !== "string") throw new Error("Invalid text field");
+      }
+      if (item.status !== undefined && typeof item.status !== "string") throw new Error("Invalid publication status");
+      item.bullets ??= [];
+      if (!Array.isArray(item.bullets) || item.bullets.some((bullet) => typeof bullet !== "string")) throw new Error("Invalid highlights");
+      return item;
+    });
+  }
+  return result as ResumeData;
+}
+
+function parseResumeImport(value: unknown): ResumeData {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid backup");
+  const backup = value as Record<string, unknown>;
+  if ("schemaVersion" in backup && backup.schemaVersion !== resumeBackupSchemaVersion) throw new Error("Unsupported backup version");
+  if ("contentVersion" in backup && (!Number.isInteger(backup.contentVersion) || (backup.contentVersion as number) < 1)) throw new Error("Invalid content version");
+  // Explicit imports are authoritative, including old flat JSON exports without a version.
+  // Structural upgrades are safe; historical personal-content replacements are not.
+  return migratePublicationFields(readResumeData("resume" in backup ? backup.resume : backup));
+}
+
 export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "letter" }: { initialTemplate?: Template; initialPageSize?: PageSize }) {
   const [resume, setResume] = useState<ResumeData>(cloneInitial);
   const [activeSection, setActiveSection] = useState<SectionKey>("profile");
@@ -253,9 +318,9 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
       const saved = localStorage.getItem("tommy-resume-studio-v1");
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.resume) setResume(migrateSavedResume(parsed));
-        if (parsed.template) setTemplate(parsed.template);
-        if (parsed.pageSize) setPageSize(parsed.pageSize);
+        if (parsed.resume) setResume(migrateSavedResume({ ...parsed, resume: readResumeData(parsed.resume) }));
+        if (["Scholar", "Modern", "Compact"].includes(parsed.template)) setTemplate(parsed.template);
+        if (["letter", "a4"].includes(parsed.pageSize)) setPageSize(parsed.pageSize);
         if (parsed.locale === "en" || parsed.locale === "zh") setLocale(parsed.locale);
         setStatus("restored");
       }
@@ -310,7 +375,7 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
   };
 
   const exportData = () => {
-    const blob = new Blob([JSON.stringify(resume, null, 2)], { type: "application/json" });
+    const blob = new Blob([serializeResume(resume)], { type: "application/json" });
     const href = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = href;
@@ -327,8 +392,7 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
     reader.onload = () => {
       try {
         const parsed = JSON.parse(String(reader.result));
-        if (!parsed.profile || !parsed.education || !parsed.experience) throw new Error("Invalid resume");
-        setResume(migrateSavedResume({ resume: parsed }));
+        setResume(parseResumeImport(parsed));
         setStatus("imported");
       } catch {
         setStatus("importError");
@@ -427,7 +491,9 @@ function ProfileEditor({ profile, locale, onChange }: { profile: ResumeData["pro
   const fields: Array<[keyof typeof profile, string, "input" | "textarea"]> = [
     ["name", labels.name, "input"], ["headline", labels.headline, "input"], ["email", labels.email, "input"], ["phone", labels.phone, "input"], ["location", labels.location, "input"], ["website", labels.website, "input"], ["github", labels.github, "input"], ["linkedin", labels.linkedin, "input"], ["updated", labels.updated, "input"],
   ];
-  return <div className="form-stack profile-grid">{fields.map(([field, label, type]) => <label key={field} className={field === "headline" ? "field-wide" : ""}><span>{label}</span>{type === "textarea" ? <textarea rows={4} value={profile[field]} onChange={(event) => onChange(field, event.target.value)} /> : <input value={profile[field]} onChange={(event) => onChange(field, event.target.value)} />}</label>)}</div>;
+  return <div className="form-stack profile-grid">{fields.map(([field, label, type]) => field === "name" || field === "headline"
+    ? <FormattedField key={field} label={label} value={profile[field]} locale={locale} onChange={(value) => onChange(field, value)} />
+    : <label key={field}><span>{label}</span>{type === "textarea" ? <textarea rows={4} value={profile[field]} onChange={(event) => onChange(field, event.target.value)} /> : <input value={profile[field]} onChange={(event) => onChange(field, event.target.value)} />}</label>)}</div>;
 }
 
 function ItemsEditor({ section, locale, items, onAdd, onRemove, onMove, onChange }: { section: Exclude<SectionKey, "profile">; locale: Locale; items: ResumeItem[]; onAdd: () => void; onRemove: (id: string) => void; onMove: (index: number, direction: -1 | 1) => void; onChange: (id: string, field: keyof ResumeItem, value: string | string[]) => void }) {
@@ -436,11 +502,13 @@ function ItemsEditor({ section, locale, items, onAdd, onRemove, onMove, onChange
     {items.map((item, index) => <article className="item-card" key={item.id}>
       <div className="item-card-heading"><span>{String(index + 1).padStart(2, "0")}</span><div><button aria-label={copy.moveUp} disabled={index === 0} onClick={() => onMove(index, -1)}>↑</button><button aria-label={copy.moveDown} disabled={index === items.length - 1} onClick={() => onMove(index, 1)}>↓</button><button className="danger" onClick={() => onRemove(item.id)}>{copy.delete}</button></div></div>
       <div className="form-stack compact-form">
-        <label className="field-wide"><span>{section === "publications" ? copy.itemFields.publicationTitle : section === "skills" ? copy.itemFields.category : copy.itemFields.title}</span><input value={item.title} onChange={(e) => onChange(item.id, "title", e.target.value)} /></label>
-        <label className="field-wide"><span>{section === "publications" ? copy.itemFields.authors : section === "skills" ? copy.itemFields.skillList : copy.itemFields.organization}</span><input value={item.subtitle} onChange={(e) => onChange(item.id, "subtitle", e.target.value)} /></label>
-        <label><span>{copy.itemFields.location}</span><input value={item.location} onChange={(e) => onChange(item.id, "location", e.target.value)} /></label>
+        <FormattedField label={section === "publications" ? copy.itemFields.publicationTitle : section === "skills" ? copy.itemFields.category : copy.itemFields.title} value={item.title} locale={locale} onChange={(value) => onChange(item.id, "title", value)} />
+        <FormattedField label={section === "publications" ? copy.itemFields.authors : section === "skills" ? copy.itemFields.skillList : copy.itemFields.organization} value={item.subtitle} locale={locale} onChange={(value) => onChange(item.id, "subtitle", value)} />
+        {section === "publications"
+          ? <label><span>{copy.itemFields.status}</span><input value={item.status ?? ""} onChange={(e) => onChange(item.id, "status", e.target.value)} /></label>
+          : <label><span>{copy.itemFields.location}</span><input value={item.location} onChange={(e) => onChange(item.id, "location", e.target.value)} /></label>}
         <label><span>{copy.itemFields.date}</span><input value={item.date} onChange={(e) => onChange(item.id, "date", e.target.value)} /></label>
-        {section !== "skills" && section !== "publications" && <label className="field-wide"><span>{copy.itemFields.bullets}</span><textarea rows={5} value={item.bullets.join("\n")} onChange={(e) => onChange(item.id, "bullets", e.target.value.split("\n"))} /></label>}
+        {section !== "skills" && section !== "publications" && <FormattedField label={copy.itemFields.bullets} rows={5} value={item.bullets.join("\n")} locale={locale} onChange={(value) => onChange(item.id, "bullets", value.split("\n"))} />}
       </div>
     </article>)}
     <button className="add-button" onClick={onAdd}>＋ {copy.add} {copy.sectionLabels[section]}</button>
@@ -471,8 +539,8 @@ function ResumePaper({ resume, template, pageSize, zoom, onOverflowChange }: { r
 
   return <article ref={paperRef} className={`resume-paper theme-${template.toLowerCase()} page-${pageSize}`} style={{ "--preview-scale": zoom / 100 } as React.CSSProperties}>
     <header className="resume-header">
-      <h2>{p.name}</h2>
-      <p className="resume-headline">{p.headline}</p>
+      <h2><InlineText text={p.name} /></h2>
+      <p className="resume-headline"><InlineText text={p.headline} /></p>
       <div className="resume-contact">
         <div className="contact-row">
           {p.location && <ContactItem icon={FaLocationDot}>{p.location}</ContactItem>}
@@ -519,10 +587,6 @@ function ResumeSection({ title, children }: { title: string; children: ReactNode
   return <section className="resume-section"><h3>{title}</h3>{children}</section>;
 }
 
-function PublicFrameRate({ text }: { text: string }) {
-  return <>{text.split(/(20 FPS)/g).map((part, index) => index % 2 === 1 ? <strong key={index}>{part}</strong> : part)}</>;
-}
-
 function ExperienceList({ items }: { items: ResumeItem[] }) {
   const groups = items.reduce<Array<{ organization: string; location: string; roles: ResumeItem[] }>>((result, item) => {
     const previous = result.at(-1);
@@ -538,17 +602,17 @@ function ExperienceList({ items }: { items: ResumeItem[] }) {
     const [onlyRole] = group.roles;
     if (group.roles.length === 1) {
       return <div className="resume-entry" key={onlyRole.id}>
-        <div className="entry-heading"><strong>{group.organization}</strong>{onlyRole.date && <span>{onlyRole.date}</span>}</div>
-        <div className="entry-subheading"><em>{onlyRole.title}</em>{group.location && <span>{group.location}</span>}</div>
-        {onlyRole.bullets.filter(Boolean).length > 0 && <ul>{onlyRole.bullets.filter(Boolean).map((bullet, index) => <li key={index}><PublicFrameRate text={bullet} /></li>)}</ul>}
+        <div className="entry-heading"><strong><InlineText text={group.organization} /></strong>{onlyRole.date && <span>{onlyRole.date}</span>}</div>
+        <div className="entry-subheading"><em><InlineText text={onlyRole.title} /></em>{group.location && <span>{group.location}</span>}</div>
+        {onlyRole.bullets.filter(Boolean).length > 0 && <ul>{onlyRole.bullets.filter(Boolean).map((bullet, index) => <li key={index}><InlineText text={bullet} emphasizeMetrics /></li>)}</ul>}
       </div>;
     }
 
     return <div className="resume-entry experience-group" key={`${group.organization}-${group.roles.map((role) => role.id).join("-")}`}>
-      <div className="entry-heading"><strong>{group.organization}</strong>{group.location && <span>{group.location}</span>}</div>
+      <div className="entry-heading"><strong><InlineText text={group.organization} /></strong>{group.location && <span>{group.location}</span>}</div>
       {group.roles.map((role) => <div className="experience-role" key={role.id}>
-        <div className="entry-subheading"><em>{role.title}</em>{role.date && <span>{role.date}</span>}</div>
-        {role.bullets.filter(Boolean).length > 0 && <ul>{role.bullets.filter(Boolean).map((bullet, index) => <li key={index}><PublicFrameRate text={bullet} /></li>)}</ul>}
+        <div className="entry-subheading"><em><InlineText text={role.title} /></em>{role.date && <span>{role.date}</span>}</div>
+        {role.bullets.filter(Boolean).length > 0 && <ul>{role.bullets.filter(Boolean).map((bullet, index) => <li key={index}><InlineText text={bullet} emphasizeMetrics /></li>)}</ul>}
       </div>)}
     </div>;
   })}</>;
@@ -556,8 +620,9 @@ function ExperienceList({ items }: { items: ResumeItem[] }) {
 
 function ItemList({ items, publication = false, skills = false }: { items: ResumeItem[]; publication?: boolean; skills?: boolean }) {
   return <>{items.map((item) => <div className={`resume-entry ${publication ? "publication-entry" : ""} ${skills ? "skill-entry" : ""}`} key={item.id}>
-    <div className="entry-heading"><strong>{item.title}</strong>{item.date && <span>{item.date}</span>}</div>
-    <div className="entry-subheading"><em>{item.subtitle}</em>{item.location && <span>{item.location}</span>}</div>
-    {item.bullets.filter(Boolean).length > 0 && <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{bullet}</li>)}</ul>}
+    <div className="entry-heading"><strong><InlineText text={item.title} /></strong>{item.date && <span>{item.date}</span>}</div>
+    <div className="entry-subheading"><em><InlineText text={item.subtitle} /></em>{!publication && item.location && <span>{item.location}</span>}</div>
+    {publication && item.status && <div className="publication-status">{item.status}</div>}
+    {item.bullets.filter(Boolean).length > 0 && <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}><InlineText text={bullet} /></li>)}</ul>}
   </div>)}</>;
 }

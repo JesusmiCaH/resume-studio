@@ -9,6 +9,8 @@ The current release focuses on resume editing and export. Interview-design and m
 ## Features
 
 - Edit profile, education, experience, projects, publications, and skills
+- Select text and use Bold or Insert link in titles, authors, skills, and descriptions; keyboard shortcuts are Cmd/Ctrl+B and Cmd/Ctrl+K
+- Keep publication status separate from location, and emphasize individual author names
 - Switch the editor interface between English and Chinese, with English as the default
 - Preview changes immediately in Scholar, Modern, and Compact templates
 - Switch between US Letter and A4 page sizes
@@ -45,6 +47,12 @@ npm run build
 ## Data and privacy
 
 Resume drafts are stored in the browser's local storage. They persist when the same site is reopened from the same browser profile, but they do not automatically follow the user to another browser or device. JSON export provides a portable backup.
+
+Formatted fields accept `**bold**` and `[link text](https://example.com)`. The toolbar inserts this notation for selected text; the live preview and printed resume display the formatting. Link labels can include bold text. Supported destinations are HTTP, HTTPS, and `mailto:`; HTML and unsupported links are displayed as text. Bold applied across multiple highlight lines stays within each line. Use a backslash to escape a literal formatting character.
+
+JSON backups include `schemaVersion`, `contentVersion`, and `resume`. Import accepts these backups and older flat JSON exports. Explicit imports preserve the supplied content rather than reapplying historical personal-content corrections. Older browser drafts still receive their one-time content migrations. Formatting remains in string fields, so it survives JSON round trips without an external editor or dependency. Publication statuses formerly stored in `location` are migrated when recognized; legacy locations remain in backups but are not printed, and an explicitly cleared status stays empty.
+
+Run `npm test` for the production build plus inline formatting, content migration, backup, and rendered-template checks.
 
 Do not commit personal interview notes, confidential employer information, or exported resume JSON files containing data that should remain private.
 

@@ -7,10 +7,10 @@ import ts from "typescript";
 const source = readFileSync(new URL("../app/resume-builder.tsx", import.meta.url), "utf8");
 const data = source.slice(source.indexOf("const tabs:"), source.indexOf("export function ResumeBuilder"));
 const context = vm.createContext({});
-vm.runInContext(ts.transpileModule(`${data}\nglobalThis.api = { initialResume, migrateSavedResume };`, {
+vm.runInContext(ts.transpileModule(`${data}\nglobalThis.api = { initialResume, migrateSavedResume, serializeResume, parseResumeImport };`, {
   compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS },
 }).outputText, context);
-const { initialResume, migrateSavedResume } = context.api;
+const { initialResume, migrateSavedResume, serializeResume, parseResumeImport } = context.api;
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
 test("migrates legacy Tera drafts without altering other resume content", () => {
@@ -123,4 +123,74 @@ test("corrects only the Wisconsin GPA while preserving local edits and other sch
   assert.equal(migrateSavedResume({ resume: edited, contentVersion: 19 }), edited);
   edited.education.shift();
   assert.equal(migrateSavedResume({ resume: edited, contentVersion: 19 }), edited);
+});
+
+test("versioned JSON round trips preserve inline formatting, links and all custom content", () => {
+  const draft = clone(initialResume);
+  draft.profile.headline = "**Vision** · [Research](https://example.com)";
+  draft.profile.linkedin = "My custom profile";
+  draft.education[0].bullets = ["GPA: 3.82/4.0"];
+  draft.experience[0].bullets = ["My **Gaussian Splatting** work with [results](https://example.com/results_(2026))."];
+  draft.experience[0].date = "My custom date";
+  draft.publications[0].subtitle = "Another Author, **Chenghao Jiang**";
+  draft.publications[0].location = "A hidden legacy location";
+  draft.publications[0].status = "";
+  const backup = JSON.parse(serializeResume(draft));
+  assert.equal(backup.schemaVersion, 1);
+  assert.equal(backup.contentVersion, 21);
+  const imported = clone(parseResumeImport(backup));
+  assert.deepEqual(imported, draft);
+  assert.deepEqual(clone(migrateSavedResume({ resume: imported, contentVersion: backup.contentVersion })), draft);
+  assert.deepEqual(clone(parseResumeImport(JSON.parse(serializeResume(imported)))), draft);
+});
+
+test("explicit old flat imports preserve edits instead of replaying personal-content migrations", () => {
+  const draft = clone(initialResume);
+  draft.experience[0].bullets = ["Custom reconstruction with **Gaussian Splatting**"];
+  draft.experience[1].date = "Custom internship dates";
+  draft.education[0].bullets = ["Custom GPA"];
+  assert.deepEqual(clone(parseResumeImport(draft)), draft);
+  assert.deepEqual(clone(parseResumeImport({ contentVersion: 15, resume: draft })), draft);
+});
+
+test("publication status migrates once without exposing or destroying a location", () => {
+  const draft = clone(initialResume);
+  delete draft.publications[0].status;
+  draft.publications[0].location = "Under review";
+  const migrated = clone(parseResumeImport(draft));
+  assert.equal(migrated.publications[0].status, "Under review");
+  assert.equal(migrated.publications[0].location, "Under review");
+  assert.equal(draft.publications[0].status, undefined);
+  migrated.publications[0].status = "";
+  assert.equal(parseResumeImport(migrated).publications[0].status, "");
+  assert.equal(migrateSavedResume({ resume: migrated, contentVersion: 21 }).publications[0].status, "");
+  draft.publications[0].location = "San Francisco, CA";
+  assert.equal(parseResumeImport(draft).publications[0].status, "");
+  assert.equal(parseResumeImport(draft).publications[0].location, "San Francisco, CA");
+});
+
+test("imports reject malformed data before it replaces a valid draft", () => {
+  for (const value of [null, [], {}, { profile: {}, education: [], experience: [] }, { schemaVersion: 2, resume: initialResume }, { contentVersion: "21", resume: initialResume }]) {
+    assert.throws(() => parseResumeImport(value));
+  }
+  for (const mutate of [
+    (draft) => { draft.experience[0].bullets = [123]; },
+    (draft) => { draft.profile.email = {}; },
+    (draft) => { draft.publications[0].status = false; },
+    (draft) => { draft.projects = "wrong"; },
+  ]) {
+    const draft = clone(initialResume);
+    mutate(draft);
+    assert.throws(() => parseResumeImport(draft));
+  }
+});
+
+test("legacy imports can omit optional sections and item fields", () => {
+  const legacy = { profile: { name: "Test User" }, education: [{ id: "edu", title: "University" }], experience: [] };
+  const result = clone(parseResumeImport(legacy));
+  assert.deepEqual(result.publications, []);
+  assert.deepEqual(result.skills, []);
+  assert.deepEqual(result.projects, []);
+  assert.deepEqual(result.education[0], { id: "edu", title: "University", subtitle: "", location: "", date: "", bullets: [] });
+  assert.equal(result.profile.email, "");
 });
