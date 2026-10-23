@@ -22,9 +22,12 @@ for (const template of ["Scholar", "Modern", "Compact"]) {
       assert.match(html, new RegExp(`theme-${template.toLowerCase()} page-${page}`));
       assert.match(html, /Bold: Name/);
       assert.match(html, /Insert link: Research focus/);
-      assert.match(html, /class="publication-status">Under review/);
+      assert.match(html, /Fill in your education 1/);
+      assert.match(html, /Your organization/);
+      assert.match(html, /accept=".json,application\/json"/);
+      assert.doesNotMatch(html, /Chenghao|Tera AI|Johns Hopkins|Wisconsin|tommyjiangch/);
       assert.doesNotMatch(html, /codex-preview|Your site is taking shape/);
-      assert.match(html, /<strong class="result-metric">20 FPS<\/strong>/);
+
     });
   }
 }

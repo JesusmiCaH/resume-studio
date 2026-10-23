@@ -13,17 +13,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://chenghao-resume-studio.townkuku.chatgpt.site"),
-  title: "Resume Studio — Chenghao Jiang",
+  title: "Resume Studio",
   description: "A private, browser-based resume editor with live PDF-ready templates.",
   applicationName: "Resume Studio",
-  authors: [{ name: "Chenghao Jiang", url: "https://jesusmicah.github.io" }],
-  keywords: ["resume builder", "academic CV", "PDF resume", "3D computer vision"],
+  keywords: ["resume builder", "academic CV", "PDF resume", "resume templates"],
   openGraph: {
     title: "Resume Studio",
     description: "Edit once. Export beautifully.",
     type: "website",
-    url: "https://chenghao-resume-studio.townkuku.chatgpt.site",
     images: [{ url: "/og.png", width: 1200, height: 630, alt: "Resume Studio — Edit once. Export beautifully." }],
   },
   twitter: {

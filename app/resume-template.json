@@ -1,0 +1,70 @@
+{
+  "profile": {
+    "name": "Your Name",
+    "headline": "Your professional title / focus",
+    "email": "you@example.com",
+    "phone": "",
+    "location": "City, Country",
+    "website": "",
+    "github": "",
+    "linkedin": "",
+    "updated": ""
+  },
+  "education": [
+    {
+      "id": "education-1",
+      "title": "Fill in your education 1",
+      "subtitle": "Your degree / field of study",
+      "location": "",
+      "date": "",
+      "bullets": [
+        "Add your academic highlights."
+      ]
+    }
+  ],
+  "experience": [
+    {
+      "id": "experience-1",
+      "title": "Fill in your role 1",
+      "subtitle": "Your organization",
+      "location": "",
+      "date": "",
+      "bullets": [
+        "Describe your responsibilities and achievements."
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "id": "project-1",
+      "title": "Fill in your project 1",
+      "subtitle": "Your role",
+      "location": "",
+      "date": "",
+      "bullets": [
+        "Describe the project and your contribution."
+      ]
+    }
+  ],
+  "publications": [
+    {
+      "id": "publication-1",
+      "title": "Fill in your publication 1",
+      "subtitle": "Author names",
+      "location": "",
+      "date": "",
+      "bullets": [],
+      "status": ""
+    }
+  ],
+  "skills": [
+    {
+      "id": "skill-1",
+      "title": "Fill in your skill category 1",
+      "subtitle": "List your skills",
+      "location": "",
+      "date": "",
+      "bullets": []
+    }
+  ]
+}

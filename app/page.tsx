@@ -1,8 +1,8 @@
 import { ResumeBuilder } from "./resume-builder";
 
 export const metadata = {
-  title: "Resume Studio — Chenghao Jiang",
-  description: "Edit, preview, and export a polished academic resume.",
+  title: "Resume Studio",
+  description: "Edit, preview, and export a polished resume.",
 };
 
 export default async function Home({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
