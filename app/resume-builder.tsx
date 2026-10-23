@@ -5,6 +5,7 @@ import { FaGithub, FaLink, FaLinkedin, FaLocationDot, FaPhone, FaRegEnvelope } f
 import type { IconType } from "react-icons";
 import { InlineText } from "./inline-format";
 import { FormattedField } from "./formatted-field";
+import templateData from "./resume-template.json";
 
 type Template = "Scholar" | "Modern" | "Compact";
 type PageSize = "letter" | "a4";
@@ -44,11 +45,12 @@ type ResumeData = {
 const translations = {
   en: {
     sectionLabels: { profile: "Profile", education: "Education", experience: "Experience", projects: "Projects", publications: "Publications", skills: "Skills" },
-    status: { loaded: "Previous resume loaded", restored: "Last edit restored", readError: "Local draft could not be read", saving: "Saving…", saved: "Autosaved", exported: "Data exported", imported: "Data imported", importError: "Import failed: invalid JSON", reset: "Defaults restored" },
+    status: { loaded: "Template loaded", restored: "Last edit restored", readError: "Local draft could not be read", saving: "Saving…", saved: "Autosaved", exported: "Data exported", imported: "Data imported", importError: "Import failed: unreadable file or invalid resume JSON", reset: "Template restored" },
     personalWorkspace: "PERSONAL WORKSPACE",
     language: "Interface language",
-    reset: "Reset",
+    reset: "Reset template",
     importJson: "Import JSON",
+    importHint: "Choose a resume JSON from your computer, including your outputs folder.",
     exportJson: "Export JSON",
     exportPdf: "Export PDF",
     content: "CONTENT",
@@ -72,15 +74,16 @@ const translations = {
     moveDown: "Move down",
     delete: "Delete",
     add: "Add",
-    confirmReset: "Restore the original imported resume? Your current edits will be replaced.",
+    confirmReset: "Restore the sample template? Your current edits will be replaced.",
   },
   zh: {
     sectionLabels: { profile: "个人信息", education: "教育经历", experience: "工作经历", projects: "项目经历", publications: "论文发表", skills: "技能方向" },
-    status: { loaded: "已载入旧简历", restored: "已恢复上次编辑", readError: "本地草稿无法读取", saving: "保存中…", saved: "已自动保存", exported: "数据已导出", imported: "数据已导入", importError: "导入失败：JSON 格式不正确", reset: "已恢复初始内容" },
+    status: { loaded: "已载入模板", restored: "已恢复上次编辑", readError: "本地草稿无法读取", saving: "保存中…", saved: "已自动保存", exported: "数据已导出", imported: "数据已导入", importError: "导入失败：文件无法读取或简历 JSON 格式不正确", reset: "已恢复模板" },
     personalWorkspace: "个人工作台",
     language: "界面语言",
-    reset: "恢复初始",
+    reset: "恢复模板",
     importJson: "导入 JSON",
+    importHint: "从电脑中选择简历 JSON 文件，也可选择 outputs 文件夹中的文件。",
     exportJson: "导出 JSON",
     exportPdf: "导出 PDF",
     content: "内容",
@@ -104,7 +107,7 @@ const translations = {
     moveDown: "下移",
     delete: "删除",
     add: "添加",
-    confirmReset: "恢复为从旧简历导入的初始内容？当前修改会被覆盖。",
+    confirmReset: "恢复为示例模板？当前修改会被覆盖。",
   },
 };
 
@@ -112,100 +115,18 @@ const tabs: SectionKey[] = ["profile", "education", "experience", "projects", "p
 const resumeContentVersion = 21;
 const resumeBackupSchemaVersion = 1;
 
-const jhuExperience: ResumeItem = {
-  id: "exp-jhu",
-  title: "Research Assistant · Advisor: Prof. Anand Bhattad",
-  subtitle: "Johns Hopkins University",
-  location: "Remote",
-  date: "Sep 2025 — Feb 2026",
-  bullets: [
-    "Designed a ViT-based image encoder that disentangles a photo into illumination (extrinsic) and scene content (intrinsic), with a decoder that reconstructs accurate images from combined representations.",
-    "Designed a DiT-based generative pipeline that takes lighting as a prompt and reference scene content as control, achieving high-quality vivid images.",
-  ],
-};
+// Initial content belongs to the template; the editor renders any ResumeData.
+const resumeTemplate: ResumeData = templateData;
+const createTemplateResume = () => structuredClone(resumeTemplate);
+const resumeStorageKey = "resume-studio-v1";
+// Read the previous key once so existing users keep their drafts.
+const legacyResumeStorageKey = "tommy-resume-studio-v1";
 
-const teraResearcherExperience: ResumeItem = {
-  id: "exp-tera-researcher",
-  title: "3D Vision Researcher",
-  subtitle: "Tera AI",
-  location: "Remote",
-  date: "Feb 2026 — Sep 2026",
-  bullets: [
-    "Built a geometry-guided data pipeline to prepare training and evaluation samples for learned visual correspondence in camera-based navigation.",
-    "Fine-tuned and evaluated learned correspondence models to improve visual localization robustness under real-time operating constraints. System context: camera-based, GPS-denied navigation with a publicly documented camera-input target of 20 FPS.",
-    "Built flight-replay diagnostics linking intermediate matching and pose behavior to trajectory-level failures; curated reproducible hard cases to guide the team's targeted fine-tuning.",
-    "Implemented and benchmarked video-based 3D reconstruction pipelines spanning classical SfM, feed-forward 3D models, and Gaussian Splatting, assessing geometric accuracy and visual consistency.",
-  ],
-};
-
-const teraInternExperience: ResumeItem = {
-  id: "exp-tera-intern",
-  title: "Research Intern — Part-time",
-  subtitle: "Tera AI",
-  location: "Remote",
-  date: "Aug 2025 — Feb 2026",
-  bullets: [
-    "Evaluated learning-based 3D perception approaches for long video sequences, studying memory and latency trade-offs for real-time visual localization.",
-  ],
-};
-
-const hkustExperience: ResumeItem = {
-  id: "exp-hkust-ra",
-  title: "Research Assistant · Advisor: Prof. Haoang Li",
-  subtitle: "The Hong Kong University of Science and Technology (Guangzhou)",
-  location: "Remote",
-  date: "Nov 2023 — Jun 2024",
-  bullets: [
-    "Developed an animatable human Gaussian Splatting pipeline using a canonical avatar representation and SMPL-driven deformation across per-frame body poses.",
-    "Co-designed and implemented a correspondence-guided feature-consistency loss using RoMA matches and DINO features across viewpoints and body poses, complementing photometric supervision to enforce part-level appearance consistency under articulated motion.",
-  ],
-};
-
-const initialResume: ResumeData = {
-  profile: {
-    name: "Chenghao (Tommy) Jiang",
-    headline: "3D Computer Vision · SLAM · Generative Models",
-    email: "1010851196jch@gmail.com",
-    phone: "(608) 867-9882",
-    location: "Los Angeles, CA",
-    website: "jesusmicah.github.io",
-    github: "JesusmiCaH",
-    linkedin: "https://www.linkedin.com/in/chenghao-jiang-93a979228/",
-    updated: "Aug 2026",
-  },
-  education: [
-    { id: "edu-uw", title: "University of Wisconsin–Madison", subtitle: "MS in Electrical and Computer Engineering", location: "Madison, WI", date: "Sep 2024 — Dec 2025", bullets: ["GPA: 3.66/4.0"] },
-    { id: "edu-uom", title: "University of Manchester", subtitle: "MS in Communication and Signal Processing", location: "Manchester, UK", date: "Sep 2022 — Dec 2023", bullets: ["GPA: 83.5/100 · Distinction Honor"] },
-    { id: "edu-ccust", title: "Changchun University of Science and Technology", subtitle: "BEng in Optoelectronic Information Science and Engineering", location: "Changchun, China", date: "Sep 2018 — Jun 2022", bullets: ["GPA: 3.86/5.00 · Rank: 10/221"] },
-  ],
-  experience: [
-    teraResearcherExperience,
-    teraInternExperience,
-    jhuExperience,
-    hkustExperience,
-  ],
-  projects: [
-    { id: "project-sharp", title: "Privacy-Aware Sensor Data for Cooperative Perception", subtitle: "Supervised by Prof. Akarsh Prabhakara", location: "Madison, WI", date: "Jun 2025 — Jul 2025", bullets: ["Explored cooperative SLAM under privacy constraints using SHARP, transmitting pointmap-based novel-view renderings instead of raw images.", "Evaluated VGGT on the OPV2V dataset across ego-only, SHARP-generated, and raw multi-agent inputs.", "Extended the CARLA simulation in OPV2V with depth sensing for point-cloud rescaling and downstream 3D recovery."] },
-  ],
-  publications: [
-    { id: "pub-hotmobile", title: "Privacy-Aware Sharing of Raw Spatial Sensor Data for Cooperative Perception", subtitle: "Bangya Liu, Chenghao Jiang, Chengpo Yan, Suman Banerjee, Akarsh Prabhakara", location: "", status: "Under review", date: "HotMobile 2026", bullets: [] },
-  ],
-  skills: [
-    { id: "skill-stack", title: "Programming", subtitle: "Python · CUDA · PyTorch · LaTeX", location: "", date: "", bullets: [] },
-    { id: "skill-research", title: "Research", subtitle: "3D reconstruction · SLAM · Gaussian Splatting · Diffusion Models · VLMs", location: "", date: "", bullets: [] },
-  ],
-};
-
-const cloneInitial = () => JSON.parse(JSON.stringify(initialResume)) as ResumeData;
 const makeId = () => typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
 
 function migrateSavedResume(saved: { resume?: ResumeData; contentVersion?: number }) {
-  if (!saved.resume) return cloneInitial();
-  // Content corrections apply once to historical local drafts, never to a new backup.
-  const resume = (saved.contentVersion ?? 1) >= resumeContentVersion
-    ? saved.resume
-    : migrateLegacyResumeContent(saved);
-  return migratePublicationFields(resume);
+  if (!saved.resume) return createTemplateResume();
+  return migratePublicationFields(saved.resume);
 }
 
 function migratePublicationFields(resume: ResumeData): ResumeData {
@@ -218,46 +139,6 @@ function migratePublicationFields(resume: ResumeData): ResumeData {
   return publications.some((item, index) => item !== resume.publications[index]) ? { ...resume, publications } : resume;
 }
 
-function migrateLegacyResumeContent(saved: { resume?: ResumeData; contentVersion?: number }) {
-  if (!saved.resume) return cloneInitial();
-  let resume = /^(?:https?:\/\/)?(?:www\.)?(?:linkedin\.com\/in\/)?chenghao-jiang\/?$/i.test(saved.resume.profile.linkedin.trim())
-    ? { ...saved.resume, profile: { ...saved.resume.profile, linkedin: initialResume.profile.linkedin } }
-    : saved.resume;
-  const education = resume.education.map((item) => {
-    const isWisconsin = item.id === "edu-uw" || /^University of Wisconsin\s*[-–—]\s*Madison$/i.test(item.title.trim());
-    if (!isWisconsin || !item.bullets.includes("GPA: 3.82/4.0")) return item;
-    return { ...item, bullets: item.bullets.map((bullet) => bullet === "GPA: 3.82/4.0" ? "GPA: 3.66/4.0" : bullet) };
-  });
-  if (education.some((item, index) => item !== resume.education[index])) resume = { ...resume, education };
-  if ((saved.contentVersion ?? 1) >= 18) return resume;
-  if (saved.contentVersion === 16 || saved.contentVersion === 17) {
-    return {
-      ...resume,
-      experience: resume.experience.map((item) => {
-        if (item.id !== teraResearcherExperience.id && item.subtitle.trim().toLowerCase() !== "tera ai") return item;
-        return {
-          ...item,
-          bullets: item.bullets.map((bullet) => (bullet === "Implemented and evaluated 3D reconstruction pipelines from video, assessing geometric accuracy and visual consistency." || bullet === "Implemented and benchmarked 3D reconstruction pipelines spanning classical SfM, feed-forward 3D models, and Gaussian Splatting.") ? teraResearcherExperience.bullets[3] : bullet),
-        };
-      }),
-    };
-  }
-  // Replace Tera descriptions without embedding withdrawn text in the client bundle.
-  // Keep every other section and the user's role ordering unchanged.
-  return {
-    ...resume,
-    experience: resume.experience.map((item) => {
-      const isIntern = item.id === teraInternExperience.id;
-      const isResearcher = item.id === teraResearcherExperience.id;
-      if (!isIntern && !isResearcher && item.subtitle.trim().toLowerCase() !== "tera ai") return item;
-      const replacement = isIntern || (!isResearcher && /part[\s-]*time/i.test(item.title))
-        ? teraInternExperience
-        : teraResearcherExperience;
-      return { ...item, date: replacement.date, bullets: [...replacement.bullets] };
-    }),
-  };
-}
-
 function serializeResume(resume: ResumeData) {
   return JSON.stringify({ schemaVersion: resumeBackupSchemaVersion, contentVersion: resumeContentVersion, resume }, null, 2);
 }
@@ -266,7 +147,7 @@ function readResumeData(value: unknown): ResumeData {
   const isObject = (candidate: unknown): candidate is Record<string, unknown> => !!candidate && typeof candidate === "object" && !Array.isArray(candidate);
   if (!isObject(value) || !isObject(value.profile) || typeof value.profile.name !== "string") throw new Error("Invalid resume");
   const profile = { ...value.profile };
-  for (const key of Object.keys(initialResume.profile)) {
+  for (const key of Object.keys(resumeTemplate.profile)) {
     if (profile[key] === undefined) profile[key] = "";
     if (typeof profile[key] !== "string") throw new Error("Invalid profile field");
   }
@@ -301,7 +182,7 @@ function parseResumeImport(value: unknown): ResumeData {
 }
 
 export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "letter" }: { initialTemplate?: Template; initialPageSize?: PageSize }) {
-  const [resume, setResume] = useState<ResumeData>(cloneInitial);
+  const [resume, setResume] = useState<ResumeData>(createTemplateResume);
   const [activeSection, setActiveSection] = useState<SectionKey>("profile");
   const [template, setTemplate] = useState<Template>(initialTemplate);
   const [pageSize, setPageSize] = useState<PageSize>(initialPageSize);
@@ -315,7 +196,7 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("tommy-resume-studio-v1");
+      const saved = localStorage.getItem(resumeStorageKey) ?? localStorage.getItem(legacyResumeStorageKey);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed.resume) setResume(migrateSavedResume({ ...parsed, resume: readResumeData(parsed.resume) }));
@@ -337,7 +218,7 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
 
   useEffect(() => {
     if (!ready) return;
-    localStorage.setItem("tommy-resume-studio-v1", JSON.stringify({ resume, template, pageSize, locale, contentVersion: resumeContentVersion }));
+    localStorage.setItem(resumeStorageKey, JSON.stringify({ resume, template, pageSize, locale, contentVersion: resumeContentVersion }));
     const timer = window.setTimeout(() => setStatus("saved"), 250);
     return () => window.clearTimeout(timer);
   }, [resume, template, pageSize, locale, ready]);
@@ -379,7 +260,7 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
     const href = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = href;
-    link.download = "chenghao-jiang-resume.json";
+    link.download = "resume.json";
     link.click();
     URL.revokeObjectURL(href);
     setStatus("exported");
@@ -399,12 +280,16 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
       }
       event.target.value = "";
     };
+    reader.onerror = () => {
+      setStatus("importError");
+      event.target.value = "";
+    };
     reader.readAsText(file);
   };
 
   const resetResume = () => {
     if (window.confirm(copy.confirmReset)) {
-      setResume(cloneInitial());
+      setResume(createTemplateResume());
       setTemplate("Scholar");
       setPageSize("letter");
       setStatus("reset");
@@ -416,7 +301,7 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
     <style>{`@page { size: ${pageSize === "a4" ? "A4" : "Letter"}; margin: 0; }`}</style>
     <main className="studio-shell">
       <header className="studio-header no-print">
-        <div className="brand-mark">T</div>
+        <div className="brand-mark">R</div>
         <div>
           <p className="eyebrow">{copy.personalWorkspace}</p>
           <h1>Resume Studio</h1>
@@ -428,10 +313,10 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
           </div>
           <span className="saved-dot">{copy.status[status]}</span>
           <button className="text-button" onClick={resetResume}>{copy.reset}</button>
-          <button className="secondary-button" onClick={() => fileInput.current?.click()}>{copy.importJson}</button>
+          <button className="secondary-button" title={copy.importHint} onClick={() => fileInput.current?.click()}>{copy.importJson}</button>
           <button className="secondary-button" onClick={exportData}>{copy.exportJson}</button>
           <button className="primary-button" onClick={() => window.print()}>{copy.exportPdf}</button>
-          <input ref={fileInput} className="visually-hidden" type="file" accept="application/json" onChange={importData} />
+          <input ref={fileInput} className="visually-hidden" type="file" aria-label={copy.importJson} accept=".json,application/json" onChange={importData} />
         </div>
       </header>
 
@@ -441,6 +326,7 @@ export function ResumeBuilder({ initialTemplate = "Scholar", initialPageSize = "
             <div><p className="eyebrow">{copy.content}</p><h2>{copy.editResume}</h2></div>
             <span className="step-count">{String(tabs.indexOf(activeSection) + 1).padStart(2, "0")} / 06</span>
           </div>
+          <p className="import-hint">{copy.importHint}</p>
           <nav className="section-tabs" aria-label={copy.resumeSections}>
             {tabs.map((tab) => <button key={tab} className={activeSection === tab ? "active" : ""} onClick={() => setActiveSection(tab)}>{copy.sectionLabels[tab]}</button>)}
           </nav>

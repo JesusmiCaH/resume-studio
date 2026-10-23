@@ -50,7 +50,7 @@ Resume drafts are stored in the browser's local storage. They persist when the s
 
 Formatted fields accept `**bold**` and `[link text](https://example.com)`. The toolbar inserts this notation for selected text; the live preview and printed resume display the formatting. Link labels can include bold text. Supported destinations are HTTP, HTTPS, and `mailto:`; HTML and unsupported links are displayed as text. Bold applied across multiple highlight lines stays within each line. Use a backslash to escape a literal formatting character.
 
-JSON backups include `schemaVersion`, `contentVersion`, and `resume`. Import accepts these backups and older flat JSON exports. Explicit imports preserve the supplied content rather than reapplying historical personal-content corrections. Older browser drafts still receive their one-time content migrations. Formatting remains in string fields, so it survives JSON round trips without an external editor or dependency. Publication statuses formerly stored in `location` are migrated when recognized; legacy locations remain in backups but are not printed, and an explicitly cleared status stays empty.
+JSON backups include `schemaVersion`, `contentVersion`, and `resume`. Import accepts these backups and older flat JSON exports. Explicit imports preserve the supplied content rather than reapplying historical personal-content corrections. Browser drafts and explicit imports preserve personal content; migrations only normalize data structure, such as publication status fields. Formatting remains in string fields, so it survives JSON round trips without an external editor or dependency. Publication statuses formerly stored in `location` are migrated when recognized; legacy locations remain in backups but are not printed, and an explicitly cleared status stays empty.
 
 Run `npm test` for the production build plus inline formatting, content migration, backup, and rendered-template checks.
 
@@ -64,3 +64,11 @@ Do not commit personal interview notes, confidential employer information, or ex
 - Tailwind CSS
 - React Icons
 - Cloudflare Workers-compatible deployment output
+
+## Template and local imports
+
+`app/resume-builder.tsx` implements the editor and resume preview. Its generic initial content lives in `app/resume-template.json`; edit that file to change the template. Education, experience and other entries are arrays: add, remove and reorder entries in the UI without changing source code. Reset template restores sample content, not a personal resume.
+
+Click **Import JSON**, navigate to the local `outputs/` folder (or any folder on your computer), and select a `.json` backup. On macOS, use Cmd+Shift+G in the file picker to enter the folder path. The browser reads only the selected file; private files in `outputs/` are not served or bundled with the website. Import replaces the editor content; Export JSON saves the current content as `resume.json`.
+
+Drafts now use the generic `resume-studio-v1` browser storage key. The previous key is read as a fallback to preserve existing drafts without rewriting their personal content. A fresh browser starts with the sample template; an existing browser keeps its saved draft until you import or reset.
